@@ -1,0 +1,2 @@
+[38;5;9mLanguage 'nosuchlang' not found[39m
+Did you mean one of these: [38;5;11mnickel, nix, nestedtext, nu, nasm, nim, nunjucks, nginx[39m ?

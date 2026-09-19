@@ -1,0 +1,8 @@
+# build output
+/hx-ready
+/dist/
+
+# go tooling
+*.test
+coverage.out
+bin/

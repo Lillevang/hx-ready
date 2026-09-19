@@ -1,0 +1,34 @@
+# Recipe for Helix's "go" language.
+#
+# Helix wants (hx --health go):
+#   language servers: gopls, golangci-lint-lsp (binary: golangci-lint-langserver)
+#   debug adapter:    dlv
+#   formatter:        none configured
+language: go
+display_name: Go
+
+# What hx-ready considers required for "Ready". Names are executables on
+# PATH, exactly as Helix reports them.
+requires:
+  language_servers:
+    - gopls
+    - golangci-lint-langserver
+  debug_adapters:
+    - dlv
+
+fedora:
+  packages:
+    - name: golang
+      provides: [go]
+    - name: gopls
+    - name: delve
+      provides: [dlv]
+    - name: golangci-lint
+
+  commands:
+    - provides: [golangci-lint-langserver]
+      # argv form: no shell involved. ${HOME} is expanded by hx-ready.
+      env:
+        GOBIN: ${HOME}/.local/bin
+      args: [go, install, github.com/nametake/golangci-lint-langserver@latest]
+      needs: [go]
