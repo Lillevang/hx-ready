@@ -76,6 +76,13 @@ from Helix 25.07.1 on Fedora 43, ANSI codes included. Hand-written
 fixtures are named with a `-synthetic` suffix so the distinction stays
 visible.
 
+### D-015 An empty command name is not a missing executable
+Helix's default javascript debug adapter has no command, so `hx --health
+javascript` prints `✘ '' not found in $PATH`. The parser keeps the tool with
+`StatusMissing` and an empty `Binary` so `check` can show the slot, but
+`Missing()` skips it: nothing can be installed to fix it, and hx-ready never
+edits Helix config (D-005).
+
 ## Open questions
 
 Each entry states what it blocks and a proposed default. Answering one

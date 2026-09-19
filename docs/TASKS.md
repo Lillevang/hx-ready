@@ -10,21 +10,6 @@ and any new behaviour has a fixture-driven test.
 
 ## Ready
 
-### T-01 Health parser
-Implement `helix.Parse` in `internal/helix/parser.go` against the captured
-fixtures in `internal/helix/testdata/`.
-
-Must handle: several language servers, found and missing; debug adapter
-found (`✓ /path`), missing (`✘ 'dlv' not found in $PATH`), empty name
-(`✘ '' not found in $PATH`, see javascript fixture) and `None`; formatter
-`None`; the four tree-sitter lines; `Language 'x' not found` →
-`ErrUnknownLanguage` (Helix exits 0 for this, so it must be detected from
-text); garbage → `ErrUnexpectedOutput`. Also add hand-written fixtures for
-a found and a missing formatter, since no default Helix config produces one.
-
-Done when every fixture has a table-driven test and `Missing()` returns the
-right binaries for each.
-
 ### T-02 `check go` end to end (milestone 1)
 Wire `ExecRunner` → `Parse` → `recipes.Load` in `cmd/check.go` and print
 the layout from CLAUDE.md. Actionable errors for: hx not on PATH, unknown
@@ -97,3 +82,22 @@ through T-07.
 ### T-14 Formatters
 Every MVP language reports formatter `None` with default Helix config.
 Blocked on Q-06 (install formatters Helix has not been configured to use?).
+
+## Done
+
+### T-01 Health parser
+Implement `helix.Parse` in `internal/helix/parser.go` against the captured
+fixtures in `internal/helix/testdata/`.
+
+Must handle: several language servers, found and missing; debug adapter
+found (`✓ /path`), missing (`✘ 'dlv' not found in $PATH`), empty name
+(`✘ '' not found in $PATH`, see javascript fixture) and `None`; formatter
+`None`; the four tree-sitter lines; `Language 'x' not found` →
+`ErrUnknownLanguage` (Helix exits 0 for this, so it must be detected from
+text); garbage → `ErrUnexpectedOutput`. Also add hand-written fixtures for
+a found and a missing formatter, since no default Helix config produces one.
+
+Done when every fixture has a table-driven test and `Missing()` returns the
+right binaries for each.
+Done 2026-09-19. Adds D-015 (empty command names are not missing
+executables) and three `-synthetic` fixtures.

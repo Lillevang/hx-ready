@@ -61,19 +61,22 @@ type Health struct {
 }
 
 // Missing returns the executables Helix wants but cannot find, in report order.
+//
+// A tool Helix reports as missing but with an empty command name (which the
+// default javascript debug adapter produces) is left out: there is no
+// executable to install. See docs/DECISIONS.md, D-015.
 func (h *Health) Missing() []string {
 	var out []string
-	for _, ls := range h.LanguageServers {
-		if ls.Status == StatusMissing {
-			out = append(out, ls.Binary)
+	add := func(t Tool) {
+		if t.Status == StatusMissing && t.Binary != "" {
+			out = append(out, t.Binary)
 		}
 	}
-	if h.DebugAdapter.Status == StatusMissing {
-		out = append(out, h.DebugAdapter.Binary)
+	for _, ls := range h.LanguageServers {
+		add(ls)
 	}
-	if h.Formatter.Status == StatusMissing {
-		out = append(out, h.Formatter.Binary)
-	}
+	add(h.DebugAdapter)
+	add(h.Formatter)
 	return out
 }
 
