@@ -5,11 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"os"
-	"sort"
-	"strings"
 
 	"github.com/Lillevang/hx-ready/internal/helix"
+	"github.com/Lillevang/hx-ready/internal/installer"
 	"github.com/Lillevang/hx-ready/internal/recipes"
 )
 
@@ -25,7 +23,7 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	fs := flag.NewFlagSet("check", flag.ContinueOnError)
 	fs.SetOutput(stderr)
 	fs.Usage = func() { fmt.Fprint(stderr, checkUsage) }
-	if err := fs.Parse(args); err != nil {
+	if err := fs.Parse(flagsFirst(args)); err != nil {
 		return ExitUsage
 	}
 	if fs.NArg() != 1 {
@@ -39,6 +37,26 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	}
 
 	p := newPrinter(stdout)
+	language, recipe := resolveLanguage(p, stderr, language)
+	h, code := healthFor(language, stderr)
+	if code != ExitOK {
+		return code
+	}
+
+	plan, code := planFor(stderr, recipe, h)
+	if code != ExitOK {
+		return code
+	}
+	renderCheck(p, h, recipe, plan)
+	if h.Ready() {
+		return ExitOK
+	}
+	return ExitError
+}
+
+// resolveLanguage follows recipe aliases (D-009), announcing the canonical
+// name when one was followed, and returns the recipe if any.
+func resolveLanguage(p *printer, stderr io.Writer, language string) (string, *recipes.Recipe) {
 	canonical, recipe, err := recipes.Resolve(language)
 	if err != nil && !errors.Is(err, recipes.ErrNoRecipe) {
 		// A bundled recipe that fails to load is a packaging bug, not a
@@ -47,22 +65,24 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 		recipe = nil
 	}
 	if canonical != language {
-		// D-009: aliases are resolved before anything reaches hx.
 		p.line("%q is Helix's %q language; checking %s.", language, canonical, canonical)
 		p.blank()
-		language = canonical
 	}
+	return canonical, recipe
+}
 
-	h, code := healthFor(language, stderr)
-	if code != ExitOK {
-		return code
+// planFor builds the installation plan for what is missing. A nil recipe
+// yields a nil plan.
+func planFor(stderr io.Writer, recipe *recipes.Recipe, h *helix.Health) (*installer.Plan, int) {
+	if recipe == nil {
+		return nil, ExitOK
 	}
-
-	renderCheck(p, h, recipe)
-	if h.Ready() {
-		return ExitOK
+	plan, err := installer.Fedora(recipe, h.Missing())
+	if err != nil {
+		fmt.Fprintf(stderr, "The bundled recipe for %s is broken: %v\n", recipe.Language, err)
+		return nil, ExitError
 	}
-	return ExitError
+	return plan, ExitOK
 }
 
 // renderCheck prints the health report in the layout from AGENTS.md
@@ -71,7 +91,7 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 //
 // Readiness is what Helix lists (helix.Health.Ready). Whether a recipe's
 // narrower "requires" should define readiness instead is open (Q-02).
-func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe) {
+func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe, plan *installer.Plan) {
 	name := h.Language
 	if recipe != nil {
 		name = recipe.DisplayName
@@ -115,16 +135,31 @@ func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe) {
 	if recipe == nil {
 		renderNoRecipe(p, h)
 	} else {
-		p.section("Suggested installation")
 		p.blank()
-		for _, l := range suggestedCommands(recipe) {
-			p.indented(l)
-		}
+		renderPlan(p, "Suggested installation", plan)
 	}
 
 	p.section("Verify")
 	p.blank()
 	p.indented("hx --health " + h.Language)
+}
+
+// renderPlan prints the steps under a heading, then anything the recipe
+// cannot provide so nothing is hidden (Q-02).
+func renderPlan(p *printer, heading string, plan *installer.Plan) {
+	p.line("%s", heading)
+	if plan.Empty() {
+		p.blank()
+		p.indented("nothing: the recipe covers none of the missing tools")
+	} else {
+		_ = plan.Run(installer.DryRun{Out: p.w})
+	}
+	if len(plan.Uncovered) > 0 {
+		p.section("Not covered by the recipe")
+		for _, u := range plan.Uncovered {
+			p.warn(u)
+		}
+	}
 }
 
 // renderNoRecipe is the fallback for a language Helix knows but hx-ready
@@ -191,44 +226,4 @@ func toolLabel(t helix.Tool) string {
 		return t.Name
 	}
 	return t.Binary
-}
-
-// suggestedCommands renders the whole recipe as shell lines. This is the
-// read-only preview; the filtered, executable plan is the installer's job
-// (docs/TASKS.md, T-04).
-func suggestedCommands(r *recipes.Recipe) []string {
-	var out []string
-	if len(r.Fedora.Packages) > 0 {
-		names := make([]string, 0, len(r.Fedora.Packages))
-		for _, pkg := range r.Fedora.Packages {
-			names = append(names, pkg.Name)
-		}
-		out = append(out, "sudo dnf install "+strings.Join(names, " "))
-	}
-	for _, c := range r.Fedora.Commands {
-		out = append(out, renderCommand(c))
-	}
-	return out
-}
-
-// renderCommand shows a recipe command the way a user would type it.
-func renderCommand(c recipes.Command) string {
-	var parts []string
-	if c.Sudo {
-		parts = append(parts, "sudo")
-	}
-	keys := make([]string, 0, len(c.Env))
-	for k := range c.Env {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		parts = append(parts, k+"="+os.ExpandEnv(c.Env[k]))
-	}
-	if c.Shell != "" {
-		parts = append(parts, c.Shell)
-	} else {
-		parts = append(parts, c.Args...)
-	}
-	return strings.Join(parts, " ")
 }

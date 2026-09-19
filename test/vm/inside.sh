@@ -64,7 +64,29 @@ expect_contains "hx --health go"
 # T-02: unknown language.
 step "T-02: check nosuchlang"
 expect_exit 1 hx-ready check nosuchlang
-expect_contains "not"
+expect_contains 'Helix does not know language "nosuchlang"'
+
+# T-03: a language Helix knows but hx-ready has no recipe for.
+step "T-03: check ocaml has no recipe"
+expect_exit 1 hx-ready check ocaml
+expect_contains "No hx-ready installation recipe exists yet"
+expect_contains "dnf search ocamllsp"
+
+# T-03: terraform is not a Helix language; hcl is (alias lands with T-06).
+step "T-03: check terraform"
+expect_exit 1 hx-ready check terraform
+
+# T-04: dry run prints the plan and changes nothing.
+step "T-04: install go --dry-run"
+expect_exit 0 hx-ready install go --dry-run
+expect_contains "Would run:"
+expect_contains "sudo dnf install -y golang gopls delve golangci-lint"
+expect_contains "go install github.com/nametake/golangci-lint-langserver@latest"
+if command -v gopls >/dev/null; then
+  echo "FAIL: dry run installed gopls"; fail=1
+else
+  echo "ok:   gopls still absent after dry run"
+fi
 
 echo
 if [ "$fail" -eq 0 ]; then

@@ -70,8 +70,8 @@ func TestCheck(t *testing.T) {
 				"Language servers\n  ✘ gopls\n  ✘ golangci-lint-lsp\n",
 				"Debug adapter\n  ✘ dlv\n",
 				"Formatter\n  ✓ none configured\n",
-				"Suggested installation\n\n  sudo dnf install golang gopls delve golangci-lint\n",
-				"  GOBIN=/home/tester/.local/bin go install github.com/nametake/golangci-lint-langserver@latest\n",
+				"Suggested installation\n\n  sudo dnf install -y golang gopls delve golangci-lint\n",
+				"  GOBIN=/home/tester/.local/bin \\\n    go install github.com/nametake/golangci-lint-langserver@latest\n",
 				"Verify\n\n  hx --health go\n",
 			},
 			wantAbsent: []string{"Ready.", "Editor support", "\x1b["},
@@ -182,7 +182,7 @@ func TestCheckAlias(t *testing.T) {
 	useRecipes(t, fstest.MapFS{
 		"hcl.yaml": {Data: []byte("language: hcl\ndisplay_name: HCL\naliases: [terraform]\nfedora:\n  packages:\n    - name: terraform-ls\n")},
 	})
-	r := &recordingRunner{fixture: "health-yaml-missing.txt"}
+	r := &recordingRunner{fixture: "health-hcl-missing-synthetic.txt"}
 	useRunner(t, r, nil)
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"check", "terraform"}, &stdout, &stderr)
@@ -194,7 +194,7 @@ func TestCheckAlias(t *testing.T) {
 	}
 	for _, w := range []string{
 		"\"terraform\" is Helix's \"hcl\" language; checking hcl.\n\nHCL\n",
-		"sudo dnf install terraform-ls",
+		"sudo dnf install -y terraform-ls",
 		"hx --health hcl",
 	} {
 		if !strings.Contains(stdout.String(), w) {
@@ -235,8 +235,10 @@ Formatter
 
 Suggested installation
 
-  sudo dnf install golang gopls delve golangci-lint
-  GOBIN=/home/tester/.local/bin go install github.com/nametake/golangci-lint-langserver@latest
+  sudo dnf install -y golang gopls delve golangci-lint
+
+  GOBIN=/home/tester/.local/bin \
+    go install github.com/nametake/golangci-lint-langserver@latest
 
 Verify
 

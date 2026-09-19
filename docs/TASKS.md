@@ -10,13 +10,6 @@ and any new behaviour has a fixture-driven test.
 
 ## Ready
 
-### T-04 Install plan and `--dry-run` (milestone 2a)
-Implement `installer.Fedora`: group packages into one `sudo dnf install`
-step, one step per command, order by `needs`, expand `${HOME}` in env,
-drop steps that provide nothing from the missing list. Implement `DryRun`
-rendering ("Would run:") and wire `install --dry-run`. Tests use the
-`Executor` interface; nothing touches the system. Depends on T-02.
-
 ### T-05 Real install (milestone 2b)
 Confirmation prompt before privileged steps (`--yes` skips it), `Exec`
 executor streaming output, Fedora detection (D-008), re-run health
@@ -106,3 +99,14 @@ resolves to `hcl` once that recipe exists. Depends on T-02.
 Done 2026-09-19. Captured `health-terraform-unknown.txt`: Helix suggests
 only t-languages, not hcl, so the alias (not the suggestion) is what makes
 `check terraform` work once T-06 lands.
+
+### T-04 Install plan and `--dry-run` (milestone 2a)
+Implement `installer.Fedora`: group packages into one `sudo dnf install`
+step, one step per command, order by `needs`, expand `${HOME}` in env,
+drop steps that provide nothing from the missing list. Implement `DryRun`
+rendering ("Would run:") and wire `install --dry-run`. Tests use the
+`Executor` interface; nothing touches the system. Depends on T-02.
+Done 2026-09-19. `check` renders the same filtered plan, and both list
+tools the recipe cannot provide under "Not covered by the recipe". The go
+recipe now declares `needs: [go, golangci-lint]` so those packages stay in
+the plan although Helix never reports them missing.

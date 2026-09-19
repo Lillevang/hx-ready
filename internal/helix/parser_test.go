@@ -195,6 +195,20 @@ func TestParseFixtures(t *testing.T) {
 			wantMissing: []string{"gofumpt"},
 		},
 		{
+			fixture:  "health-hcl-missing-synthetic.txt",
+			language: "hcl",
+			want: Health{
+				Language: "hcl",
+				LanguageServers: []Tool{
+					missing("terraform-ls", "terraform-ls"),
+				},
+				DebugAdapter: none,
+				Formatter:    none,
+				Parser:       StatusOK, Highlight: StatusOK, Textobjects: StatusOK, Indent: StatusOK,
+			},
+			wantMissing: []string{"terraform-ls"},
+		},
+		{
 			fixture:  "health-csv-servers-none-synthetic.txt",
 			language: "csv",
 			want: Health{

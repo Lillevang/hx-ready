@@ -25,7 +25,7 @@ func runInstall(args []string, stdout, stderr io.Writer) int {
 	fs.Usage = func() { fmt.Fprint(stderr, installUsage) }
 	dryRun := fs.Bool("dry-run", false, "print the commands that would run and exit")
 	yes := fs.Bool("yes", false, "do not ask for confirmation")
-	if err := fs.Parse(args); err != nil {
+	if err := fs.Parse(flagsFirst(args)); err != nil {
 		return ExitUsage
 	}
 	if fs.NArg() != 1 {
@@ -37,7 +37,35 @@ func runInstall(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, err)
 		return ExitUsage
 	}
-	_, _ = *dryRun, *yes
+	_ = *yes
+
+	p := newPrinter(stdout)
+	language, recipe := resolveLanguage(p, stderr, language)
+	h, code := healthFor(language, stderr)
+	if code != ExitOK {
+		return code
+	}
+	if h.Ready() {
+		renderCheck(p, h, recipe, nil)
+		p.line("Nothing to install.")
+		return ExitOK
+	}
+	if recipe == nil {
+		renderCheck(p, h, nil, nil)
+		return ExitError
+	}
+	plan, code := planFor(stderr, recipe, h)
+	if code != ExitOK {
+		return code
+	}
+
+	if *dryRun {
+		renderPlan(p, "Would run:", plan)
+		if plan.Empty() {
+			return ExitError
+		}
+		return ExitOK
+	}
 
 	return notImplemented("install", stderr)
 }

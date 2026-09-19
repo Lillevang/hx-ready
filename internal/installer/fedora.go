@@ -7,13 +7,14 @@ package installer
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"os"
+	"sort"
+	"strings"
 
 	"github.com/Lillevang/hx-ready/internal/recipes"
 )
-
-// ErrNotImplemented marks scaffolded functions. See docs/TASKS.md.
-var ErrNotImplemented = errors.New("not implemented yet")
 
 // Step is one command in a plan.
 type Step struct {
@@ -32,6 +33,32 @@ type Step struct {
 // Plan is an ordered list of steps.
 type Plan struct {
 	Steps []Step
+	// Uncovered lists missing executables that no step in the recipe
+	// provides. They are reported, never silently dropped.
+	Uncovered []string
+}
+
+// Empty reports whether the plan has nothing to run.
+func (p *Plan) Empty() bool { return len(p.Steps) == 0 }
+
+// Privileged reports whether any step needs sudo.
+func (p *Plan) Privileged() bool {
+	for _, s := range p.Steps {
+		if s.Privileged {
+			return true
+		}
+	}
+	return false
+}
+
+// Run executes every step in order through ex, stopping at the first error.
+func (p *Plan) Run(ex Executor) error {
+	for _, s := range p.Steps {
+		if err := ex.Run(s); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Executor runs steps. DryRun prints; Exec runs for real.
@@ -39,21 +66,233 @@ type Executor interface {
 	Run(step Step) error
 }
 
-// DryRun writes each step to Out in the "Would run:" format and never
-// executes anything.
+// DryRun writes each step to Out and never executes anything. The caller
+// prints the "Would run:" heading.
 type DryRun struct {
 	Out io.Writer
 }
 
 // Run implements Executor.
 func (d DryRun) Run(step Step) error {
-	return ErrNotImplemented
+	_, err := fmt.Fprintf(d.Out, "\n%s\n", indent(step.String(), "  "))
+	return err
+}
+
+// String renders a step the way a user would type it:
+//
+//	sudo dnf install -y golang gopls
+//
+//	GOBIN=/home/user/.local/bin \
+//	  go install github.com/nametake/golangci-lint-langserver@latest
+func (s Step) String() string {
+	var cmd string
+	if s.Shell != "" {
+		cmd = s.Shell
+	} else {
+		quoted := make([]string, len(s.Args))
+		for i, a := range s.Args {
+			quoted[i] = shellQuote(a)
+		}
+		cmd = strings.Join(quoted, " ")
+	}
+	if s.Privileged {
+		cmd = "sudo " + cmd
+	}
+	if len(s.Env) == 0 {
+		return cmd
+	}
+	var b strings.Builder
+	for _, kv := range s.Env {
+		b.WriteString(kv)
+		b.WriteString(" \\\n")
+	}
+	b.WriteString("  ")
+	b.WriteString(cmd)
+	return b.String()
 }
 
 // Fedora builds the plan for a recipe given the executables currently
-// missing. Packages are grouped into a single "sudo dnf install" step;
-// commands become one step each, ordered so that their Needs are satisfied.
-// Steps that provide nothing from missing are left out.
+// missing. Packages are grouped into a single "sudo dnf install -y" step
+// (D-011); commands become one step each, ordered so that their Needs are
+// satisfied. Steps that provide nothing from missing are left out, except
+// that a package is kept when an included command needs one of its
+// executables (installing an already-present package is a no-op for dnf).
 func Fedora(r *recipes.Recipe, missing []string) (*Plan, error) {
-	return nil, ErrNotImplemented
+	if r.Fedora == nil {
+		return nil, fmt.Errorf("recipe %s has no fedora block", r.Language)
+	}
+	want := toSet(missing)
+
+	// Commands that provide something missing.
+	var cmds []recipes.Command
+	for _, c := range r.Fedora.Commands {
+		if anyIn(c.Provides, want) {
+			cmds = append(cmds, c)
+		}
+	}
+	// Executables the chosen commands rely on.
+	needed := map[string]bool{}
+	for _, c := range cmds {
+		for _, n := range c.Needs {
+			needed[n] = true
+		}
+	}
+
+	// Packages that provide something missing or something needed.
+	var pkgs []string
+	covered := map[string]bool{}
+	for _, p := range r.Fedora.Packages {
+		exes := p.Executables()
+		if anyIn(exes, want) || anyIn(exes, needed) {
+			pkgs = append(pkgs, p.Name)
+			for _, e := range exes {
+				covered[e] = true
+			}
+		}
+	}
+
+	plan := &Plan{}
+	if len(pkgs) > 0 {
+		plan.Steps = append(plan.Steps, Step{
+			Provides:   coveredIn(want, covered),
+			Args:       append([]string{"dnf", "install", "-y"}, pkgs...),
+			Privileged: true,
+		})
+	}
+
+	ordered, err := orderCommands(cmds)
+	if err != nil {
+		return nil, fmt.Errorf("recipe %s: %w", r.Language, err)
+	}
+	for _, c := range ordered {
+		plan.Steps = append(plan.Steps, commandStep(c))
+		for _, e := range c.Provides {
+			covered[e] = true
+		}
+	}
+
+	for _, m := range missing {
+		if !covered[m] {
+			plan.Uncovered = append(plan.Uncovered, m)
+		}
+	}
+	return plan, nil
+}
+
+func commandStep(c recipes.Command) Step {
+	s := Step{
+		Provides:   append([]string(nil), c.Provides...),
+		Shell:      c.Shell,
+		Privileged: c.Sudo,
+	}
+	if c.Shell == "" {
+		s.Args = append([]string(nil), c.Args...)
+	}
+	keys := make([]string, 0, len(c.Env))
+	for k := range c.Env {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		// Values come from bundled recipes only (D-010); expansion is for
+		// ${HOME} and friends, never user input.
+		s.Env = append(s.Env, k+"="+os.ExpandEnv(c.Env[k]))
+	}
+	return s
+}
+
+// orderCommands sorts commands so that any command whose Needs are provided
+// by another command runs after it. Recipe order is preserved otherwise.
+func orderCommands(cmds []recipes.Command) ([]recipes.Command, error) {
+	providedBy := map[string]int{}
+	for i, c := range cmds {
+		for _, p := range c.Provides {
+			providedBy[p] = i
+		}
+	}
+	const (
+		unvisited = iota
+		visiting
+		done
+	)
+	state := make([]int, len(cmds))
+	var out []recipes.Command
+	var visit func(i int) error
+	visit = func(i int) error {
+		switch state[i] {
+		case done:
+			return nil
+		case visiting:
+			return errors.New("commands depend on each other in a cycle")
+		}
+		state[i] = visiting
+		for _, n := range cmds[i].Needs {
+			if j, ok := providedBy[n]; ok && j != i {
+				if err := visit(j); err != nil {
+					return err
+				}
+			}
+		}
+		state[i] = done
+		out = append(out, cmds[i])
+		return nil
+	}
+	for i := range cmds {
+		if err := visit(i); err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
+
+func toSet(xs []string) map[string]bool {
+	m := make(map[string]bool, len(xs))
+	for _, x := range xs {
+		m[x] = true
+	}
+	return m
+}
+
+func anyIn(xs []string, set map[string]bool) bool {
+	for _, x := range xs {
+		if set[x] {
+			return true
+		}
+	}
+	return false
+}
+
+// coveredIn returns the members of want that are in covered, sorted.
+func coveredIn(want, covered map[string]bool) []string {
+	var out []string
+	for w := range want {
+		if covered[w] {
+			out = append(out, w)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
+// shellQuote single-quotes an argument when it contains anything the shell
+// would interpret, for display only. Execution never goes through a shell
+// unless the recipe says so.
+func shellQuote(s string) string {
+	if s == "" {
+		return "''"
+	}
+	if strings.IndexFunc(s, func(r rune) bool {
+		return !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || strings.ContainsRune("-_./=:@,+", r))
+	}) < 0 {
+		return s
+	}
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+func indent(s, prefix string) string {
+	lines := strings.Split(s, "\n")
+	for i, l := range lines {
+		lines[i] = prefix + l
+	}
+	return strings.Join(lines, "\n")
 }

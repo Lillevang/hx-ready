@@ -8,6 +8,7 @@ package cmd
 import (
 	"fmt"
 	"io"
+	"strings"
 )
 
 // Exit codes. Keep them stable; scripts may depend on them.
@@ -62,6 +63,25 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintf(stderr, "hx-ready: unknown command %q\n\n%s", args[0], usage)
 	return ExitUsage
+}
+
+// flagsFirst reorders args so flags precede positional arguments, because
+// the standard flag package stops at the first non-flag and the documented
+// UX is "hx-ready install go --dry-run". Everything after "--" is left as is.
+func flagsFirst(args []string) []string {
+	var flags, rest []string
+	for i, a := range args {
+		if a == "--" {
+			rest = append(rest, args[i:]...)
+			break
+		}
+		if strings.HasPrefix(a, "-") && a != "-" {
+			flags = append(flags, a)
+		} else {
+			rest = append(rest, a)
+		}
+	}
+	return append(flags, rest...)
 }
 
 func runVersion(_ []string, stdout, _ io.Writer) int {

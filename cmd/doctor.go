@@ -21,7 +21,7 @@ func runDoctor(args []string, stdout, stderr io.Writer) int {
 	fs.SetOutput(stderr)
 	fs.Usage = func() { fmt.Fprint(stderr, doctorUsage) }
 	all := fs.Bool("all", false, "include every language Helix knows about")
-	if err := fs.Parse(args); err != nil {
+	if err := fs.Parse(flagsFirst(args)); err != nil {
 		return ExitUsage
 	}
 	if fs.NArg() != 0 {

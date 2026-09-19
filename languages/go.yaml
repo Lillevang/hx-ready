@@ -31,4 +31,6 @@ fedora:
       env:
         GOBIN: ${HOME}/.local/bin
       args: [go, install, github.com/nametake/golangci-lint-langserver@latest]
-      needs: [go]
+      # go builds it; golangci-lint is what it runs, so the package is kept
+      # even though Helix never reports golangci-lint itself as missing.
+      needs: [go, golangci-lint]
