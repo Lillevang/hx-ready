@@ -137,6 +137,21 @@ for lang in bash hcl rust; do
   expect_exit 0 bash -c "! hx --health $lang | grep -q ✘"
 done
 
+# T-07: doctor after installing go, bash, hcl and rust.
+step "T-07: doctor"
+expect_exit 0 hx-ready doctor
+expect_contains "Ready"
+expect_contains "✓ bash"
+expect_contains "✓ go"
+expect_contains "✓ hcl"
+expect_contains "✓ rust"
+expect_lacks "Could not check"
+
+step "T-07: doctor --all lists many languages"
+expect_exit 1 hx-ready doctor --all
+expect_contains "⚠ python"
+expect_contains "missing"
+
 echo
 if [ "$fail" -eq 0 ]; then
   echo "scenario: PASS"

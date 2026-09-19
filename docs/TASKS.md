@@ -10,11 +10,6 @@ and any new behaviour has a fixture-driven test.
 
 ## Ready
 
-### T-07 `doctor`
-Candidate languages per D-006, one `hx --health <lang>` per candidate,
-grouped output (Ready / Partially configured) per CLAUDE.md, `--all` flag.
-Fixture: `health-all-languages-table.txt`. Depends on T-01 and T-06.
-
 ### T-08 CI and release
 GitHub Actions running test, vet and gofmt on push and PR; tagged
 releases building a static Linux binary with `-ldflags -X
@@ -114,3 +109,11 @@ Add a test asserting that every `requires` entry is provided by some
 package or command in the same recipe. Can run in parallel with T-04.
 Done 2026-09-19. Package names verified by installing them in the `just vm`
 scenario.
+
+### T-07 `doctor`
+Candidate languages per D-006, one `hx --health <lang>` per candidate,
+grouped output (Ready / Partially configured) per CLAUDE.md, `--all` flag.
+Fixture: `health-all-languages-table.txt`. Depends on T-01 and T-06.
+Done 2026-09-19. The wide table does list every language server via
+continuation rows (D-006 assumed only the first), but names can be truncated
+and paths are absent, so the per-language check is still needed.

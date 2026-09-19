@@ -8,6 +8,7 @@ package helix
 import (
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 )
@@ -147,7 +148,11 @@ func (r ExecRunner) Health(language string) (string, error) {
 		}
 		args = append(args, language)
 	}
-	out, err := exec.Command(r.exe(), args...).CombinedOutput()
+	cmd := exec.Command(r.exe(), args...)
+	// The language table truncates names to fit the terminal width. Ask
+	// for a wide one so doctor sees whole names (D-006).
+	cmd.Env = append(os.Environ(), "COLUMNS=250")
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		if errors.Is(err, exec.ErrNotFound) {
 			return "", ErrHelixNotFound
