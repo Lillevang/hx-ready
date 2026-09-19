@@ -1,0 +1,2 @@
+[38;5;9mLanguage 'terraform' not found[39m
+Did you mean one of these: [38;5;11mtoml, textproto, typescript, typespec, tsx, twig, teal, tsq, tablegen, tfvars, task, t32, typst, todotxt, templ, tact, tcl, thrift, tera, tlaplus[39m ?

@@ -3,13 +3,24 @@ package cmd
 import (
 	"bytes"
 	"errors"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/Lillevang/hx-ready/internal/helix"
+	"github.com/Lillevang/hx-ready/internal/recipes"
 )
+
+// useRecipes swaps the bundled recipes for an in-memory set.
+func useRecipes(t *testing.T, fsys fs.FS) {
+	t.Helper()
+	old := recipes.Source
+	recipes.Source = fsys
+	t.Cleanup(func() { recipes.Source = old })
+}
 
 // fakeRunner serves captured hx --health output from internal/helix/testdata.
 type fakeRunner struct {
@@ -85,9 +96,21 @@ func TestCheck(t *testing.T) {
 			wantOut: []string{
 				"  ✘ ocamllsp\n",
 				"Editor support\n  ✓ highlighting\n  ⚠ textobjects (no tree-sitter queries)\n",
-				"No hx-ready installation recipe exists yet.",
-				"hx --health ocaml",
+				"No hx-ready installation recipe exists yet for ocaml.",
+				"Try\n\n  dnf search ocamllsp\n",
+				"Verify\n\n  hx --health ocaml\n",
 			},
+			wantAbsent: []string{"Suggested installation"},
+		},
+		{
+			// No hcl recipe is bundled yet (T-06), so "terraform" reaches
+			// Helix unchanged and Helix's own suggestions are shown. Note
+			// that Helix does not suggest hcl; the alias is what fixes this.
+			name:     "terraform without an hcl recipe",
+			runner:   fakeRunner{fixture: "health-terraform-unknown.txt"},
+			language: "terraform",
+			wantCode: ExitError,
+			wantErr:  []string{`Helix does not know language "terraform".`, "Did you mean one of these?\n  toml, textproto"},
 		},
 		{
 			name:     "debug adapter without a command is a warning",
@@ -150,6 +173,45 @@ func TestCheck(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestCheckAlias covers D-009 with an in-memory recipe set: the alias is
+// announced, the canonical name is what reaches hx, and the recipe's
+// display name is used.
+func TestCheckAlias(t *testing.T) {
+	useRecipes(t, fstest.MapFS{
+		"hcl.yaml": {Data: []byte("language: hcl\ndisplay_name: HCL\naliases: [terraform]\nfedora:\n  packages:\n    - name: terraform-ls\n")},
+	})
+	r := &recordingRunner{fixture: "health-yaml-missing.txt"}
+	useRunner(t, r, nil)
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"check", "terraform"}, &stdout, &stderr)
+	if code != ExitError {
+		t.Errorf("exit = %d, want %d; stderr: %s", code, ExitError, stderr.String())
+	}
+	if r.language != "hcl" {
+		t.Errorf("hx was asked about %q, want hcl", r.language)
+	}
+	for _, w := range []string{
+		"\"terraform\" is Helix's \"hcl\" language; checking hcl.\n\nHCL\n",
+		"sudo dnf install terraform-ls",
+		"hx --health hcl",
+	} {
+		if !strings.Contains(stdout.String(), w) {
+			t.Errorf("stdout lacks %q\nstdout:\n%s", w, stdout.String())
+		}
+	}
+}
+
+// recordingRunner remembers which language was requested.
+type recordingRunner struct {
+	fixture  string
+	language string
+}
+
+func (r *recordingRunner) Health(language string) (string, error) {
+	r.language = language
+	return fakeRunner{fixture: r.fixture}.Health(language)
 }
 
 // TestCheckGoMissingLayout pins the whole milestone-1 screen so layout

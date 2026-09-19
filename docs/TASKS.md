@@ -10,13 +10,6 @@ and any new behaviour has a fixture-driven test.
 
 ## Ready
 
-### T-03 No-recipe and wrong-name paths
-`check ocaml` prints what Helix expects, says no recipe exists, and
-suggests `dnf search <binary>` per missing tool. `check terraform`
-surfaces Helix's own "Did you mean" line (Helix has no `terraform`
-language; it is `hcl`). Add recipe aliases per D-009 so `terraform`
-resolves to `hcl` once that recipe exists. Depends on T-02.
-
 ### T-04 Install plan and `--dry-run` (milestone 2a)
 Implement `installer.Fedora`: group packages into one `sudo dnf install`
 step, one step per command, order by `needs`, expand `${HOME}` in env,
@@ -103,3 +96,13 @@ Introduce a small output helper (✓ ✘ ⚠, colour only on a TTY) that later
 commands reuse. Depends on T-01.
 Done 2026-09-19. Unknown-language errors already surface Helix's "Did you
 mean" suggestions; T-03 adds aliases and the no-recipe hints.
+
+### T-03 No-recipe and wrong-name paths
+`check ocaml` prints what Helix expects, says no recipe exists, and
+suggests `dnf search <binary>` per missing tool. `check terraform`
+surfaces Helix's own "Did you mean" line (Helix has no `terraform`
+language; it is `hcl`). Add recipe aliases per D-009 so `terraform`
+resolves to `hcl` once that recipe exists. Depends on T-02.
+Done 2026-09-19. Captured `health-terraform-unknown.txt`: Helix suggests
+only t-languages, not hcl, so the alias (not the suggestion) is what makes
+`check terraform` work once T-06 lands.

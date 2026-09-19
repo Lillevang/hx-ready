@@ -11,6 +11,11 @@ type Recipe struct {
 	Language    string `yaml:"language"`
 	DisplayName string `yaml:"display_name"`
 
+	// Aliases are other names users type for this language, e.g.
+	// "terraform" for Helix's "hcl". Resolve maps them to Language before
+	// anything reaches hx. See docs/DECISIONS.md, D-009.
+	Aliases []string `yaml:"aliases"`
+
 	// Requires lists the executables that must be on PATH for hx-ready to
 	// report "Ready". Helix may configure more tools than this; those are
 	// reported but not installed. See docs/DECISIONS.md, D-004.

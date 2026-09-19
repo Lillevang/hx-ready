@@ -82,6 +82,7 @@ func TestParseFixturesExist(t *testing.T) {
 		"health-ocaml-no-recipe.txt",
 		"health-javascript-empty-debugger.txt",
 		"health-unknown-language.txt",
+		"health-terraform-unknown.txt",
 		"health-garbage.txt",
 		"health-all-languages-table.txt",
 		"health-go-formatter-found-synthetic.txt",

@@ -38,19 +38,27 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 		return ExitUsage
 	}
 
-	h, code := healthFor(language, stderr)
-	if code != ExitOK {
-		return code
-	}
-	recipe, err := recipes.Load(language)
+	p := newPrinter(stdout)
+	canonical, recipe, err := recipes.Resolve(language)
 	if err != nil && !errors.Is(err, recipes.ErrNoRecipe) {
 		// A bundled recipe that fails to load is a packaging bug, not a
 		// user error; say so and still show the health.
 		fmt.Fprintf(stderr, "warning: %v\n", err)
 		recipe = nil
 	}
+	if canonical != language {
+		// D-009: aliases are resolved before anything reaches hx.
+		p.line("%q is Helix's %q language; checking %s.", language, canonical, canonical)
+		p.blank()
+		language = canonical
+	}
 
-	renderCheck(newPrinter(stdout), h, recipe)
+	h, code := healthFor(language, stderr)
+	if code != ExitOK {
+		return code
+	}
+
+	renderCheck(p, h, recipe)
 	if h.Ready() {
 		return ExitOK
 	}
@@ -104,11 +112,11 @@ func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe) {
 		renderQueries(p, h)
 	}
 
-	p.section("Suggested installation")
-	p.blank()
 	if recipe == nil {
-		p.indented("No hx-ready installation recipe exists yet.")
+		renderNoRecipe(p, h)
 	} else {
+		p.section("Suggested installation")
+		p.blank()
 		for _, l := range suggestedCommands(recipe) {
 			p.indented(l)
 		}
@@ -117,6 +125,23 @@ func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe) {
 	p.section("Verify")
 	p.blank()
 	p.indented("hx --health " + h.Language)
+}
+
+// renderNoRecipe is the fallback for a language Helix knows but hx-ready
+// has no recipe for: point at dnf so the user can look for the tools by
+// the names Helix wants.
+func renderNoRecipe(p *printer, h *helix.Health) {
+	p.blank()
+	p.line("No hx-ready installation recipe exists yet for %s.", h.Language)
+	missing := h.Missing()
+	if len(missing) == 0 {
+		return
+	}
+	p.section("Try")
+	p.blank()
+	for _, bin := range missing {
+		p.indented("dnf search " + bin)
+	}
 }
 
 // renderTool prints one tool line. Slots Helix has not configured count as

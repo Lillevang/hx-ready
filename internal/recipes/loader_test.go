@@ -58,6 +58,60 @@ func TestLoadMissing(t *testing.T) {
 	}
 }
 
+// TestAliasesAreUnique guards against an alias shadowing a real recipe or
+// being claimed by two recipes.
+func TestAliasesAreUnique(t *testing.T) {
+	names, err := Languages()
+	if err != nil {
+		t.Fatal(err)
+	}
+	seen := map[string]string{}
+	for _, name := range names {
+		seen[name] = name
+	}
+	for _, name := range names {
+		r, err := Load(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, a := range r.Aliases {
+			if owner, dup := seen[a]; dup {
+				t.Errorf("alias %q of %s collides with %s", a, name, owner)
+			}
+			seen[a] = name
+		}
+	}
+}
+
+func TestResolve(t *testing.T) {
+	fsys := fstest.MapFS{
+		"hcl.yaml": {Data: []byte("language: hcl\ndisplay_name: HCL\naliases: [terraform, tf]\nfedora: {}\n")},
+		"go.yaml":  {Data: []byte("language: go\ndisplay_name: Go\nfedora: {}\n")},
+	}
+	cases := []struct {
+		in, wantLang string
+		wantErr      error
+	}{
+		{"go", "go", nil},
+		{"hcl", "hcl", nil},
+		{"terraform", "hcl", nil},
+		{"tf", "hcl", nil},
+		{"ocaml", "ocaml", ErrNoRecipe},
+	}
+	for _, c := range cases {
+		lang, r, err := resolveFrom(fsys, c.in)
+		if !errors.Is(err, c.wantErr) {
+			t.Errorf("Resolve(%q) err = %v, want %v", c.in, err, c.wantErr)
+		}
+		if lang != c.wantLang {
+			t.Errorf("Resolve(%q) language = %q, want %q", c.in, lang, c.wantLang)
+		}
+		if c.wantErr == nil && (r == nil || r.Language != c.wantLang) {
+			t.Errorf("Resolve(%q) recipe = %+v", c.in, r)
+		}
+	}
+}
+
 func TestValidate(t *testing.T) {
 	cases := map[string]string{
 		"name mismatch":     "language: rust\ndisplay_name: X\nfedora: {}\n",
@@ -67,6 +121,8 @@ func TestValidate(t *testing.T) {
 		"command no output": "language: x\ndisplay_name: X\nfedora:\n  commands:\n    - args: [a]\n",
 		"args and shell":    "language: x\ndisplay_name: X\nfedora:\n  commands:\n    - provides: [a]\n      args: [a]\n      shell: a\n",
 		"neither":           "language: x\ndisplay_name: X\nfedora:\n  commands:\n    - provides: [a]\n",
+		"self alias":        "language: x\ndisplay_name: X\naliases: [x]\nfedora: {}\n",
+		"empty alias":       "language: x\ndisplay_name: X\naliases: ['']\nfedora: {}\n",
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) {

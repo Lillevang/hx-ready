@@ -247,6 +247,19 @@ func TestParseUnknownLanguage(t *testing.T) {
 	}
 }
 
+func TestParseUnknownLanguageTerraform(t *testing.T) {
+	_, err := Parse("terraform", fixture(t, "health-terraform-unknown.txt"))
+	var ule *UnknownLanguageError
+	if !errors.As(err, &ule) {
+		t.Fatalf("err = %v, want *UnknownLanguageError", err)
+	}
+	// Helix matches on the leading letter, so hcl is not among the
+	// suggestions. That is why recipes carry aliases (D-009).
+	if ule.Language != "terraform" || len(ule.Suggestions) != 20 || ule.Suggestions[0] != "toml" {
+		t.Errorf("got %+v, want terraform with 20 suggestions starting with toml", ule)
+	}
+}
+
 func TestParseUnexpected(t *testing.T) {
 	cases := map[string]string{
 		"garbage fixture": fixture(t, "health-garbage.txt"),
