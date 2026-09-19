@@ -40,3 +40,15 @@ build:
 bin:
     mkdir -p bin
     go build -o bin/hx-ready .
+
+# End-to-end run in a throwaway Fedora VM (never touches the host). KEEP=1 keeps it.
+vm:
+    bash test/vm.sh
+
+# ssh into a VM kept with KEEP=1 just vm.
+vm-ssh:
+    bash test/vm.sh ssh
+
+# Stop a kept VM.
+vm-stop:
+    bash test/vm.sh stop
