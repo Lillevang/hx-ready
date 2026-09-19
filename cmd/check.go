@@ -5,6 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/Lillevang/hx-ready/internal/helix"
 	"github.com/Lillevang/hx-ready/internal/installer"
@@ -139,9 +142,45 @@ func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe, plan *inst
 		renderPlan(p, "Suggested installation", plan)
 	}
 
+	renderPathHint(p, h)
+
 	p.section("Verify")
 	p.blank()
 	p.indented("hx --health " + h.Language)
+}
+
+// localBin is where user-level installs go (D-007). A variable for tests.
+var localBin = func() string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(home, ".local", "bin")
+}
+
+// renderPathHint prints a one-line hint when a missing tool already exists
+// in ~/.local/bin: it was installed, Helix just cannot see it (D-007).
+// Shell rc files are never edited.
+func renderPathHint(p *printer, h *helix.Health) {
+	dir := localBin()
+	if dir == "" {
+		return
+	}
+	var found []string
+	for _, bin := range h.Missing() {
+		if fi, err := os.Stat(filepath.Join(dir, bin)); err == nil && !fi.IsDir() {
+			found = append(found, bin)
+		}
+	}
+	if len(found) == 0 {
+		return
+	}
+	p.section("PATH")
+	p.blank()
+	p.indented(fmt.Sprintf("%s exists in %s, but that directory is not on Helix's PATH.", strings.Join(found, ", "), dir))
+	p.indented("Add it to your shell and restart Helix:")
+	p.blank()
+	p.indented(`export PATH="$HOME/.local/bin:$PATH"`)
 }
 
 // renderPlan prints the steps under a heading, then anything the recipe

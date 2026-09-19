@@ -88,6 +88,45 @@ else
   echo "ok:   gopls still absent after dry run"
 fi
 
+# T-05: declining the prompt installs nothing.
+step "T-05: install go, answer n"
+expect_exit 1 bash -c 'echo n | hx-ready install go'
+expect_contains "Will run:"
+expect_contains "Proceed? [y/N]"
+expect_contains "Aborted. Nothing was installed."
+if command -v gopls >/dev/null; then
+  echo "FAIL: declined install still installed gopls"; fail=1
+else
+  echo "ok:   gopls still absent after declining"
+fi
+
+# T-05: the real thing. dnf plus a go install from the network.
+step "T-05: install go --yes"
+expect_exit 0 hx-ready install go --yes
+expect_contains "\$ sudo dnf install -y golang gopls delve golangci-lint"
+expect_contains "\$ GOBIN=/home/test/.local/bin"
+expect_contains "Verifying with hx --health go"
+expect_contains "Ready."
+expect_lacks "Proceed?"
+
+step "T-05: tools are really there"
+expect_exit 0 bash -c 'command -v gopls && command -v dlv && command -v golangci-lint && command -v golangci-lint-langserver'
+expect_exit 0 hx-ready check go
+expect_contains "Ready."
+expect_exit 0 bash -c '! hx --health go | grep -q ✘'
+
+step "T-05: second install is a no-op"
+expect_exit 0 hx-ready install go --yes
+expect_contains "Nothing to install."
+expect_lacks "\$ sudo"
+
+# D-007: with ~/.local/bin off PATH, Helix cannot see the langserver and
+# check says why.
+step "T-05: PATH hint when ~/.local/bin is not on PATH"
+expect_exit 1 env PATH=/usr/local/bin:/usr/bin:/bin "$HOME/.local/bin/hx-ready" check go
+expect_contains "golangci-lint-langserver exists in /home/test/.local/bin"
+expect_contains 'export PATH="$HOME/.local/bin:$PATH"'
+
 echo
 if [ "$fail" -eq 0 ]; then
   echo "scenario: PASS"

@@ -10,13 +10,6 @@ and any new behaviour has a fixture-driven test.
 
 ## Ready
 
-### T-05 Real install (milestone 2b)
-Confirmation prompt before privileged steps (`--yes` skips it), `Exec`
-executor streaming output, Fedora detection (D-008), re-run health
-afterwards and print the final `check` view, PATH hint when a tool was
-installed to `~/.local/bin` but Helix still cannot see it (D-007).
-Depends on T-04.
-
 ### T-06 Recipes wave 1: Fedora-packaged languages
 Add `rust.yaml` (rust-analyzer, lldb for lldb-dap), `bash.yaml`
 (nodejs-bash-language-server), `hcl.yaml` (terraform-ls, alias
@@ -110,3 +103,12 @@ Done 2026-09-19. `check` renders the same filtered plan, and both list
 tools the recipe cannot provide under "Not covered by the recipe". The go
 recipe now declares `needs: [go, golangci-lint]` so those packages stay in
 the plan although Helix never reports them missing.
+
+### T-05 Real install (milestone 2b)
+Confirmation prompt before privileged steps (`--yes` skips it), `Exec`
+executor streaming output, Fedora detection (D-008), re-run health
+afterwards and print the final `check` view, PATH hint when a tool was
+installed to `~/.local/bin` but Helix still cannot see it (D-007).
+Depends on T-04.
+Done 2026-09-19. The PATH hint lives in the `check` view so it shows both
+after an install and on a plain `check`. Verified end to end with `just vm`.
