@@ -1,0 +1,300 @@
+Language   Language … Debug ada… Formatter… Highlight… Textobjec… Indent     
+ada        ✘ ada-l…   None       None       ✓          ✓          ✘          
+adl        None       None       None       ✓          ✓          ✓          
+agda       None       None       None       ✓          ✘          ✘          
+alloy      None       None       None       ✓          ✘          ✘          
+amber      ✘ amber…   None       None       ✓          ✘          ✘          
+astro      ✘ astro…   None       None       ✓          ✘          ✘          
+awk        ✘ awk-l…   None       None       ✓          ✓          ✘          
+bash       ✓ bash-…   None       None       ✓          ✓          ✓          
+bass       ✘ bass     None       None       ✓          ✘          ✘          
+beancount… ✘ beanc…   None       None       ✓          ✘          ✘          
+bibtex     ✘ texla…   None       ✘ bibte…   ✓          ✘          ✘          
+bicep      ✘ bicep…   None       None       ✓          ✘          ✘          
+bitbake    ✘ bitba…   None       None       ✓          ✘          ✘          
+blade      None       None       None       ✓          ✘          ✘          
+blueprint… ✘ bluep…   None       None       ✓          ✘          ✘          
+c          ✓ clang…   ✓ lldb-…   None       ✓          ✓          ✓          
+c-sharp    ✘ omnis…   ✘ netco…   None       ✓          ✓          ✘          
+cabal      ✘ haske…   None       None       ✘          ✘          ✘          
+caddyfile… None       None       ✘ caddy…   ✓          ✓          ✓          
+cairo      ✘ cairo…   None       None       ✓          ✓          ✓          
+capnp      None       None       None       ✓          ✘          ✓          
+cel        None       None       None       ✓          ✘          ✘          
+circom     ✘ circo…   None       None       ✓          ✘          ✘          
+clarity    ✘ clari…   None       None       ✓          ✘          ✘          
+clojure    ✘ cloju…   None       None       ✓          ✘          ✘          
+cmake      ✘ neocm…   None       None       ✓          ✓          ✓          
+           ✘ cmake…   
+codeql     ✘ codeq…   None       None       ✓          ✓          ✘          
+comment    None       None       None       ✓          ✘          ✘          
+common-li… ✘ cl-ls…   None       None       ✓          ✘          ✓          
+cpon       None       None       None       ✓          ✘          ✓          
+cpp        ✓ clang…   ✓ lldb-…   None       ✓          ✓          ✓          
+crystal    ✘ cryst…   None       ✓ cryst…   ✓          ✓          ✓          
+           ✓ ameba…   
+css        ✘ vscod…   None       None       ✓          ✘          ✓          
+csv        None       None       None       ✓          ✘          ✘          
+cue        ✘ cuels…   None       ✘ cue      ✓          ✘          ✘          
+cylc       None       None       None       ✓          ✓          ✓          
+d          ✘ serve…   None       ✘ dfmt     ✓          ✓          ✓          
+dart       ✘ dart     None       None       ✓          ✓          ✓          
+dbml       None       None       None       ✓          ✘          ✘          
+debian     None       None       None       ✓          ✘          ✘          
+devicetre… ✘ dts-l…   None       None       ✓          ✘          ✘          
+dhall      ✘ dhall…   None       ✘ dhall…   ✓          ✓          ✘          
+diff       None       None       None       ✓          ✘          ✘          
+djot       None       None       None       ✓          ✘          ✘          
+docker-co… ✘ docke…   None       None       ✓          ✓          ✓          
+           ✘ yaml-…   
+dockerfil… ✘ docke…   None       None       ✓          ✓          ✘          
+dot        ✘ dot-l…   None       None       ✓          ✘          ✘          
+dtd        None       None       None       ✓          ✘          ✘          
+dune       None       None       ✘ dune     ✓          ✘          ✘          
+dunstrc    None       None       None       ✓          ✘          ✘          
+earthfile… ✘ earth…   None       None       ✓          ✓          ✓          
+edoc       None       None       None       ✓          ✘          ✘          
+eex        None       None       None       ✓          ✘          ✘          
+ejs        None       None       None       ✓          ✘          ✘          
+elisp      None       None       None       ✓          ✘          ✘          
+elixir     ✓ elixi…   None       None       ✓          ✓          ✓          
+elm        ✘ elm-l…   None       None       ✓          ✓          ✘          
+elvish     ✘ elvis…   None       None       ✓          ✘          ✘          
+env        None       None       None       ✓          ✓          ✘          
+erb        None       None       None       ✓          ✘          ✘          
+erlang     ✘ erlan…   None       None       ✓          ✓          ✘          
+           ✘ elp      
+esdl       None       None       None       ✓          ✘          ✘          
+fennel     ✘ fenne…   None       ✘ fnlfm…   ✓          ✘          ✘          
+fga        None       None       None       ✓          ✓          ✓          
+fidl       None       None       None       ✓          ✘          ✘          
+fish       ✘ fish-…   None       ✘ fish_…   ✓          ✓          ✓          
+forth      ✘ forth…   None       None       ✓          ✘          ✘          
+fortran    ✘ fortl…   None       None       ✓          ✘          ✓          
+fsharp     ✘ fshar…   None       None       ✓          ✘          ✘          
+gas        ✘ asm-l…   None       None       ✓          ✓          ✘          
+gdscript   None       None       ✘ gdfor…   ✓          ✓          ✓          
+gemini     None       None       None       ✓          ✘          ✘          
+gherkin    None       None       None       ✓          ✘          ✘          
+ghostty    None       None       None       ✓          ✘          ✘          
+git-attri… None       None       None       ✓          ✘          ✘          
+git-commi… None       None       None       ✓          ✓          ✘          
+git-confi… None       None       None       ✓          ✓          ✘          
+git-ignor… None       None       None       ✓          ✘          ✘          
+git-notes… None       None       None       ✓          ✘          ✘          
+git-rebas… None       None       None       ✓          ✘          ✘          
+gjs        ✘ types…   None       None       ✓          ✓          ✓          
+           ✘ vscod…   
+           ✘ ember…   
+gleam      ✘ gleam…   None       None       ✓          ✓          ✘          
+glimmer    ✘ ember…   None       ✘ prett…   ✓          ✘          ✘          
+glsl       ✘ glsl_…   None       None       ✓          ✓          ✓          
+gn         None       None       ✘ gn       ✓          ✘          ✘          
+go         ✘ gopls…   ✘ dlv      None       ✓          ✓          ✓          
+           ✘ golan…   
+godot-res… None       None       None       ✓          ✓          ✘          
+gomod      ✘ gopls…   None       None       ✓          ✘          ✘          
+gotmpl     ✘ gopls…   None       None       ✓          ✘          ✘          
+gowork     ✘ gopls…   None       None       ✓          ✘          ✘          
+gpr        ✘ ada-g…   None       None       ✓          ✘          ✘          
+graphql    ✘ graph…   None       None       ✓          ✓          ✘          
+gren       None       None       None       ✓          ✓          ✘          
+groovy     None       None       None       ✓          ✘          ✘          
+gts        ✘ types…   None       None       ✓          ✓          ✓          
+           ✘ vscod…   
+           ✘ ember…   
+hare       None       None       None       ✓          ✘          ✘          
+haskell    ✘ haske…   None       None       ✓          ✓          ✘          
+haskell-p… None       None       None       ✓          ✘          ✘          
+hcl        ✓ terra…   None       None       ✓          ✓          ✓          
+heex       ✓ elixi…   None       None       ✓          ✓          ✘          
+helm       ✘ helm_…   None       None       ✓          ✘          ✘          
+hocon      None       None       None       ✓          ✓          ✓          
+hoon       None       None       None       ✓          ✘          ✘          
+hosts      None       None       None       ✓          ✘          ✘          
+html       ✘ vscod…   None       None       ✓          ✘          ✘          
+           ✘ super…   
+htmldjang… ✘ djlsp…   None       None       ✓          ✘          ✘          
+           ✘ vscod…   
+           ✘ super…   
+hurl       None       None       ✘ hurlf…   ✓          ✓          ✓          
+hyprlang   ✘ hyprl…   None       None       ✓          ✘          ✓          
+idris      ✘ idris…   None       None       ✘          ✘          ✘          
+iex        None       None       None       ✓          ✘          ✘          
+ini        None       None       None       ✓          ✘          ✘          
+ink        None       None       None       ✓          ✘          ✘          
+inko       None       None       ✘ inko     ✓          ✓          ✓          
+janet      None       None       ✘ janet…   ✓          ✘          ✘          
+java       ✘ jdtls…   None       None       ✓          ✓          ✓          
+javascrip… ✘ types…   ✘          None       ✓          ✓          ✓          
+jinja      None       None       None       ✓          ✘          ✘          
+jjdescrip… None       None       None       ✓          ✘          ✘          
+jq         ✘ jq-ls…   None       None       ✓          ✓          ✘          
+jsdoc      None       None       None       ✓          ✘          ✘          
+json       ✘ vscod…   None       None       ✓          ✓          ✓          
+json-ld    ✘ vscod…   None       None       ✓          ✓          ✓          
+json5      None       None       None       ✓          ✘          ✘          
+jsonc      ✘ vscod…   None       None       ✓          ✘          ✓          
+jsonnet    ✘ jsonn…   None       None       ✓          ✘          ✘          
+jsx        ✘ types…   None       None       ✓          ✓          ✓          
+julia      ✘ julia…   None       None       ✓          ✓          ✓          
+just       ✘ just-…   None       None       ✓          ✓          ✓          
+kdl        None       None       ✘ kdlfm…   ✓          ✓          ✓          
+koka       ✘ koka     None       None       ✓          ✘          ✓          
+kotlin     ✘ kotli…   None       None       ✓          ✓          ✓          
+koto       ✘ koto-…   None       None       ✓          ✓          ✓          
+latex      ✘ texla…   None       None       ✓          ✓          ✘          
+ld         None       None       None       ✓          ✘          ✓          
+ldif       None       None       None       ✓          ✘          ✘          
+lean       ✘ lean     None       None       ✓          ✘          ✘          
+ledger     None       None       None       ✓          ✘          ✘          
+llvm       None       None       None       ✓          ✓          ✓          
+llvm-mir   None       None       None       ✓          ✓          ✓          
+llvm-mir-… None       None       None       ✓          ✘          ✓          
+log        None       None       None       ✓          ✘          ✘          
+lpf        None       None       None       ✓          ✘          ✘          
+lua        ✘ lua-l…   None       None       ✓          ✓          ✓          
+luau       ✘ luau     None       None       ✓          ✓          ✓          
+mail       None       None       None       ✓          ✓          ✘          
+make       None       None       None       ✓          ✘          ✓          
+markdoc    ✘ markd…   None       None       ✓          ✘          ✘          
+markdown   ✘ marks…   None       None       ✓          ✘          ✘          
+           ✘ markd…   
+markdown-… None       None       None       ✓          ✘          ✘          
+markdown.… None       None       None       ✓          ✘          ✘          
+matlab     None       None       None       ✓          ✓          ✓          
+mermaid    None       None       None       ✓          ✘          ✘          
+meson      ✘ meson…   None       None       ✓          ✘          ✓          
+mint       ✘ mint     None       None       ✘          ✘          ✘          
+mojo       ✘ mojo-…   None       ✘ pixi     ✓          ✓          ✓          
+move       None       None       None       ✓          ✘          ✘          
+msbuild    None       None       None       ✓          ✘          ✓          
+nasm       ✘ asm-l…   None       None       ✓          ✓          ✘          
+nestedtex… None       None       None       ✓          ✓          ✓          
+nginx      None       None       None       ✓          ✘          ✘          
+nickel     ✘ nls      None       None       ✓          ✘          ✓          
+nim        ✘ nimla…   None       None       ✓          ✓          ✓          
+nix        ✘ nil      None       None       ✓          ✓          ✓          
+           ✘ nixd     
+nu         ✘ nu-ls…   None       None       ✓          ✘          ✘          
+nunjucks   None       None       None       ✓          ✘          ✘          
+ocaml      ✘ ocaml…   None       None       ✓          ✘          ✓          
+ocaml-int… ✘ ocaml…   None       None       ✓          ✘          ✘          
+odin       ✘ ols      ✓ lldb-…   ✘ odinf…   ✓          ✓          ✓          
+ohm        None       None       None       ✓          ✓          ✓          
+opencl     ✓ clang…   None       None       ✓          ✓          ✓          
+openscad   ✘ opens…   None       None       ✓          ✘          ✘          
+org        None       None       None       ✓          ✘          ✘          
+pascal     ✘ pasls…   None       None       ✓          ✓          ✘          
+passwd     None       None       None       ✓          ✘          ✘          
+pem        None       None       None       ✓          ✘          ✘          
+perl       ✘ perln…   None       None       ✓          ✓          ✓          
+pest       ✘ pest-…   None       None       ✓          ✓          ✓          
+php        ✘ intel…   None       None       ✓          ✓          ✓          
+php-only   None       None       None       ✓          ✘          ✘          
+pkgbuild   ✘ termu…   None       None       ✓          ✓          ✓          
+           ✓ bash-…   
+pkl        ✘ pkl-l…   None       None       ✓          ✘          ✓          
+po         None       None       None       ✓          ✓          ✘          
+pod        None       None       None       ✓          ✘          ✘          
+ponylang   None       None       None       ✓          ✓          ✓          
+powershel… None       None       None       ✓          ✘          ✘          
+prisma     ✘ prism…   None       None       ✓          ✓          ✘          
+prolog     ✘ swipl…   None       None       ✓          ✘          ✓          
+propertie… None       None       None       ✓          ✓          ✘          
+protobuf   ✘ buf      None       None       ✓          ✓          ✓          
+           ✘ pbkit…   
+           ✘ proto…   
+prql       None       None       None       ✓          ✘          ✘          
+pug        None       None       None       ✓          ✘          ✘          
+purescrip… ✘ pures…   None       ✘ purs-…   ✓          ✓          ✘          
+python     ✘ ty       None       None       ✓          ✓          ✓          
+           ✓ ruff     
+           ✘ jedi     
+           ✘ pylsp…   
+qml        ✘ qmlls…   None       None       ✓          ✓          ✓          
+quarto     None       None       None       ✓          ✘          ✓          
+quint      ✘ quint…   None       None       ✓          ✘          ✘          
+r          ✘ r        None       None       ✓          ✘          ✘          
+racket     ✘ racke…   None       None       ✓          ✘          ✓          
+regex      None       None       None       ✓          ✘          ✘          
+rego       ✘ regol…   None       None       ✓          ✘          ✘          
+rescript   ✘ rescr…   None       None       ✓          ✓          ✘          
+rmarkdown… ✘ r        None       None       ✓          ✘          ✓          
+robot      ✘ robot…   None       None       ✓          ✘          ✘          
+ron        None       None       None       ✓          ✘          ✓          
+rst        None       None       None       ✓          ✘          ✘          
+ruby       ✘ ruby-…   None       None       ✓          ✓          ✓          
+           ✘ solar…   
+rust       ✓ rust-…   ✓ lldb-…   None       ✓          ✓          ✓          
+rust-form… None       None       None       ✓          ✘          ✘          
+rust-form… None       None       None       ✓          ✓          ✓          
+sage       None       None       None       ✓          ✓          ✘          
+scala      ✘ metal…   None       None       ✓          ✓          ✓          
+scheme     None       None       None       ✓          ✘          ✓          
+scss       ✘ vscod…   None       None       ✓          ✘          ✘          
+slang      ✘ slang…   None       None       ✓          ✓          ✓          
+slint      ✘ slint…   None       None       ✓          ✓          ✓          
+smali      None       None       None       ✓          ✘          ✓          
+smithy     ✘ cs       None       None       ✓          ✘          ✘          
+sml        None       None       None       ✓          ✘          ✘          
+snakemake… ✘ pylsp…   None       ✘ snake…   ✓          ✘          ✓          
+solidity   ✘ solc     None       None       ✓          ✓          ✘          
+sourcepaw… ✘ sourc…   None       None       ✓          ✓          ✘          
+spade      ✘ spade…   None       None       ✓          ✘          ✓          
+spicedb    None       None       None       ✓          ✘          ✘          
+sql        None       None       None       ✓          ✓          ✘          
+sshclient… None       None       None       ✓          ✘          ✘          
+starlark   ✘ starp…   None       None       ✓          ✓          ✓          
+strace     None       None       None       ✓          ✘          ✘          
+supercoll… None       None       None       ✓          ✘          ✘          
+svelte     ✘ svelt…   None       None       ✓          ✘          ✓          
+sway       ✘ forc     None       None       ✓          ✓          ✓          
+swift      ✘ sourc…   None       ✘ swift…   ✓          ✓          ✘          
+systemd    ✘ syste…   None       None       ✓          ✘          ✘          
+t32        None       None       None       ✓          ✘          ✘          
+tablegen   None       None       None       ✓          ✓          ✓          
+tact       None       None       None       ✓          ✓          ✓          
+task       None       None       None       ✓          ✘          ✘          
+tcl        None       None       None       ✓          ✘          ✓          
+teal       ✘ teal-…   None       None       ✓          ✘          ✘          
+templ      ✘ templ…   None       None       ✓          ✘          ✘          
+tera       None       None       None       ✓          ✘          ✘          
+textproto… None       None       ✘ txtpb…   ✓          ✓          ✓          
+tfvars     ✓ terra…   None       None       ✓          ✘          ✓          
+thrift     None       None       None       ✓          ✘          ✘          
+tlaplus    None       None       ✘ tlafm…   ✓          ✘          ✘          
+todotxt    None       None       ✓ sort     ✓          ✘          ✘          
+toml       ✘ taplo…   None       None       ✓          ✓          ✘          
+           ✘ tombi…   
+tsq        ✘ ts_qu…   None       None       ✓          ✘          ✘          
+tsx        ✘ types…   None       None       ✓          ✓          ✓          
+twig       None       None       None       ✓          ✘          ✘          
+typescrip… ✘ types…   None       None       ✓          ✓          ✓          
+typespec   ✘ types…   None       None       ✓          ✓          ✓          
+typst      ✘ tinym…   None       None       ✓          ✘          ✘          
+ungrammar… None       None       None       ✓          ✘          ✘          
+unison     None       None       None       ✓          ✓          ✓          
+uxntal     None       None       None       ✓          ✘          ✘          
+v          ✘ vlang…   None       None       ✓          ✓          ✓          
+vala       ✘ vala-…   None       None       ✓          ✓          ✘          
+vento      None       None       None       ✓          ✘          ✘          
+verilog    ✘ svlan…   None       None       ✓          ✓          ✘          
+vhdl       ✘ vhdl_…   None       None       ✓          ✘          ✘          
+vhs        None       None       None       ✓          ✘          ✘          
+vue        ✘ vuels…   None       None       ✓          ✘          ✘          
+wast       None       None       None       ✓          ✘          ✘          
+wat        ✘ wasm-…   None       None       ✓          ✘          ✘          
+webc       None       None       None       ✓          ✘          ✘          
+werk       None       None       None       ✓          ✘          ✘          
+wesl       None       None       None       ✓          ✓          ✘          
+wgsl       ✘ wgsl-…   None       None       ✓          ✘          ✘          
+wit        None       None       None       ✓          ✘          ✓          
+wren       None       None       None       ✓          ✓          ✓          
+xit        None       None       None       ✓          ✘          ✘          
+xml        None       None       None       ✓          ✘          ✓          
+xtc        None       None       None       ✓          ✘          ✘          
+yaml       ✘ yaml-…   None       None       ✓          ✓          ✓          
+yara       ✘ yls      None       None       ✓          ✘          ✘          
+yuck       None       None       None       ✓          ✘          ✘          
+zig        ✓ zls      ✓ lldb-…   ✓ zig      ✓          ✓          ✓          

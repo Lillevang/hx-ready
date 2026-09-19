@@ -87,6 +87,43 @@ func TestParseTable(t *testing.T) {
 	}
 }
 
+// TestParseTableNarrow uses a real capture from a session without a tty
+// (80 columns): headers, tool names and long language names are truncated.
+func TestParseTableNarrow(t *testing.T) {
+	rows, err := ParseTable(fixture(t, "health-all-languages-table-narrow.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 277 {
+		t.Errorf("rows = %d, want 277", len(rows))
+	}
+	byName := map[string]LanguageRow{}
+	truncated := 0
+	for _, r := range rows {
+		byName[r.Language] = r
+		if strings.HasSuffix(r.Language, Truncated) {
+			truncated++
+		}
+	}
+	if truncated == 0 {
+		t.Error("expected truncated language names in the narrow capture")
+	}
+	g := byName["go"]
+	if len(g.LanguageServers) != 2 || g.LanguageServers[0].Name != "gopls" || g.LanguageServers[1].Name != "golan" || g.DebugAdapter.Name != "dlv" {
+		t.Errorf("go = %+v", g)
+	}
+	if r := byName["rust"]; !r.HasInstalledTool() || r.DebugAdapter.Status != StatusOK {
+		t.Errorf("rust = %+v", r)
+	}
+	if p := byName["python"]; len(p.LanguageServers) != 4 || !p.HasInstalledTool() {
+		t.Errorf("python = %+v", p)
+	}
+	// lldb-dap is cut to "lldb-" at this width; the mark still counts.
+	if z := byName["zig"]; z.Formatter.Name != "zig" || z.Formatter.Status != StatusOK || z.DebugAdapter.Name != "lldb-" || z.DebugAdapter.Status != StatusOK {
+		t.Errorf("zig = %+v", z)
+	}
+}
+
 func TestParseTableErrors(t *testing.T) {
 	cases := map[string]string{
 		"garbage":         fixture(t, "health-garbage.txt"),

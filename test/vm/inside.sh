@@ -137,14 +137,19 @@ for lang in bash rust; do
   expect_exit 0 bash -c "! hx --health $lang | grep -q ✘"
 done
 
-# T-07: doctor after installing go, bash, hcl and rust.
+# T-07: doctor after installing go, bash and rust. lldb-dap from the rust
+# recipe also makes c, cpp and zig candidates (D-006), and those miss
+# their language servers, so the overall exit is 1.
 step "T-07: doctor"
-expect_exit 0 hx-ready doctor
+expect_exit 1 hx-ready doctor
 expect_contains "Ready"
 expect_contains "✓ bash"
 expect_contains "✓ go"
 expect_contains "✓ rust"
+expect_contains "⚠ c"
+expect_contains "missing clangd"
 expect_lacks "Could not check"
+expect_lacks "…"
 
 step "T-07: doctor --all lists many languages"
 expect_exit 1 hx-ready doctor --all

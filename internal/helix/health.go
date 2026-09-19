@@ -150,8 +150,13 @@ func (r ExecRunner) Health(language string) (string, error) {
 	}
 	cmd := exec.Command(r.exe(), args...)
 	// The language table truncates names to fit the terminal width. Ask
-	// for a wide one so doctor sees whole names (D-006).
+	// for a wide one so doctor sees whole names (D-006). Helix only honours
+	// COLUMNS when TERM is set, and a session without a tty (ssh without
+	// -t, CI) has no TERM, so supply a harmless one.
 	cmd.Env = append(os.Environ(), "COLUMNS=250")
+	if os.Getenv("TERM") == "" {
+		cmd.Env = append(cmd.Env, "TERM=dumb")
+	}
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		if errors.Is(err, exec.ErrNotFound) {

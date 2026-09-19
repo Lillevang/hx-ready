@@ -120,7 +120,10 @@ grouped output (Ready / Partially configured) per CLAUDE.md, `--all` flag.
 Fixture: `health-all-languages-table.txt`. Depends on T-01 and T-06.
 Done 2026-09-19. The wide table does list every language server via
 continuation rows (D-006 assumed only the first), but names can be truncated
-and paths are absent, so the per-language check is still needed.
+and paths are absent, so the per-language check is still needed. Helix
+honours COLUMNS only when TERM is set, so ExecRunner supplies TERM=dumb in
+tty-less sessions; the parser also copes with an 80-column table
+(`health-all-languages-table-narrow.txt`, a real capture).
 
 ### T-08 CI and release
 GitHub Actions running test, vet and gofmt on push and PR; tagged

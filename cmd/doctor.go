@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/Lillevang/hx-ready/internal/helix"
 	"github.com/Lillevang/hx-ready/internal/recipes"
@@ -74,7 +76,9 @@ func runDoctor(args []string, stdout, stderr io.Writer) int {
 			continue
 		}
 		e := doctorEntry{language: row.Language, hasRecipe: hasRecipe[row.Language]}
-		if raw, err := runner.Health(row.Language); err != nil {
+		if strings.HasSuffix(row.Language, helix.Truncated) {
+			e.err = errors.New("name truncated by Helix; run doctor in a wider terminal")
+		} else if raw, err := runner.Health(row.Language); err != nil {
 			e.err = err
 		} else if h, err := helix.Parse(row.Language, raw); err != nil {
 			e.err = err

@@ -85,6 +85,7 @@ func TestParseFixturesExist(t *testing.T) {
 		"health-terraform-unknown.txt",
 		"health-garbage.txt",
 		"health-all-languages-table.txt",
+		"health-all-languages-table-narrow.txt",
 		"health-go-formatter-found-synthetic.txt",
 		"health-go-formatter-missing-synthetic.txt",
 		"health-csv-servers-none-synthetic.txt",

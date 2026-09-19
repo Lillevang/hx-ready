@@ -30,36 +30,40 @@ func (r LanguageRow) HasInstalledTool() bool {
 	return r.DebugAdapter.Status == StatusOK || r.Formatter.Status == StatusOK
 }
 
-// tableHeaders in column order. The first column is the language name.
-var tableHeaders = []string{"Language servers", "Debug adapter", "Formatter", "Highlight", "Textobject", "Indent"}
+// tableColumns is how many columns the table has: language, language
+// servers, debug adapter, formatter, highlight, textobject, indent.
+const tableColumns = 7
+
+// Truncated is the suffix Helix appends when a cell does not fit.
+const Truncated = "…"
 
 // ParseTable converts the output of "hx --health languages" (or the table
-// part of plain "hx --health") into rows. Columns are located from the
-// header line, so the width Helix chose does not matter as long as names
-// are not so truncated that the columns collapse; run with COLUMNS=250.
+// part of plain "hx --health") into rows. Helix lays the table out in
+// equal-width columns (terminal width divided by the column count), so the
+// width is read from where the second header cell starts and the terminal
+// width Helix chose does not matter. In a narrow table Helix truncates
+// cells with "…"; tool names lose the marker, language names keep it so
+// callers can tell they are unusable. ExecRunner asks for a wide table
+// (D-006), so this only matters for pasted or captured output.
 func ParseTable(output string) ([]LanguageRow, error) {
 	lines := strings.Split(StripANSI(output), "\n")
 
 	// Find the header; plain "hx --health" prints clipboard info first.
 	start := -1
+	var offsets []int
 	for i, l := range lines {
-		if strings.HasPrefix(l, "Language") && strings.Contains(l, tableHeaders[0]) {
-			start = i
-			break
+		width, ok := headerColumnWidth(l)
+		if !ok {
+			continue
 		}
+		for c := 0; c < tableColumns; c++ {
+			offsets = append(offsets, c*width)
+		}
+		start = i
+		break
 	}
 	if start < 0 {
 		return nil, fmt.Errorf("%w: no language table header found", ErrUnexpectedOutput)
-	}
-	header := lines[start]
-	offsets := make([]int, 0, len(tableHeaders)+1)
-	offsets = append(offsets, 0)
-	for _, h := range tableHeaders {
-		i := strings.Index(header, h)
-		if i < 0 {
-			return nil, fmt.Errorf("%w: table header lacks %q", ErrUnexpectedOutput, h)
-		}
-		offsets = append(offsets, i) // header is ASCII: byte index == rune index
 	}
 
 	var rows []LanguageRow
@@ -96,6 +100,28 @@ func ParseTable(output string) ([]LanguageRow, error) {
 	return rows, nil
 }
 
+// headerColumnWidth recognises the header line ("Language" padded to the
+// column width, then "Language servers" or a truncated "Language …") and
+// returns the column width.
+func headerColumnWidth(line string) (int, bool) {
+	rest, ok := strings.CutPrefix(line, "Language ")
+	if !ok {
+		return 0, false
+	}
+	pad := len(rest) - len(strings.TrimLeft(rest, " "))
+	width := len("Language ") + pad
+	second := strings.TrimLeft(rest, " ")
+	if pad == 0 || !strings.HasPrefix(second, "Language") {
+		return 0, false
+	}
+	// The line is ASCII up to the second cell, so byte and rune offsets
+	// agree for the width; a whole header needs room for every column.
+	if len([]rune(line)) < (tableColumns-1)*width {
+		return 0, false
+	}
+	return width, true
+}
+
 // splitCells slices a row into trimmed cells at the given rune offsets.
 func splitCells(r []rune, offsets []int) []string {
 	cells := make([]string, len(offsets))
@@ -119,7 +145,7 @@ func parseTableTool(cell string) (Tool, bool) {
 	if mark == "" {
 		return Tool{}, false
 	}
-	name = strings.TrimSuffix(name, "…")
+	name = strings.TrimSuffix(name, Truncated)
 	t := Tool{Name: name, Binary: name}
 	if mark == markOK {
 		t.Status = StatusOK

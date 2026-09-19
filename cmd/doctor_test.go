@@ -97,6 +97,27 @@ func TestDoctorAllReady(t *testing.T) {
 	}
 }
 
+// TestDoctorNarrowTable: a truncated language name cannot be checked and is
+// reported rather than passed to hx.
+func TestDoctorNarrowTable(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	useRunner(t, mapRunner{
+		"languages": "health-all-languages-table-narrow.txt",
+		"*":         "health-rust-ready.txt",
+	}, nil)
+	var stdout, stderr bytes.Buffer
+	code := Run([]string{"doctor", "--all"}, &stdout, &stderr)
+	if code != ExitError {
+		t.Errorf("exit = %d, want %d", code, ExitError)
+	}
+	if !strings.Contains(stdout.String(), "  ✘ dockerfil…: name truncated by Helix; run doctor in a wider terminal\n") {
+		t.Errorf("stdout:\n%s", stdout.String())
+	}
+	if !strings.Contains(stdout.String(), "  ✓ go\n") {
+		t.Errorf("stdout:\n%s", stdout.String())
+	}
+}
+
 func TestDoctorErrors(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	useRunner(t, mapRunner{"languages": "health-garbage.txt"}, nil)
