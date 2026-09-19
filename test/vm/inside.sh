@@ -72,11 +72,11 @@ expect_exit 1 hx-ready check ocaml
 expect_contains "No hx-ready installation recipe exists yet"
 expect_contains "dnf search ocamllsp"
 
-# T-03/T-06: terraform is not a Helix language; the hcl recipe's alias is.
-step "T-03: check terraform resolves to hcl"
+# T-03: terraform is not a Helix language; an hcl recipe alias would fix
+# this but is blocked on Q-07 (terraform-ls is not in Fedora's repos).
+step "T-03: check terraform"
 expect_exit 1 hx-ready check terraform
-expect_contains '"terraform" is Helix'"'"'s "hcl" language; checking hcl.'
-expect_contains "sudo dnf install -y terraform-ls"
+expect_contains 'Helix does not know language "terraform"'
 
 # T-04: dry run prints the plan and changes nothing.
 step "T-04: install go --dry-run"
@@ -130,7 +130,7 @@ expect_contains "golangci-lint-langserver exists in /home/test/.local/bin"
 expect_contains 'export PATH="$HOME/.local/bin:$PATH"'
 
 # T-06: recipes wave 1, all plain dnf packages.
-for lang in bash hcl rust; do
+for lang in bash rust; do
   step "T-06: install $lang --yes"
   expect_exit 0 hx-ready install "$lang" --yes
   expect_contains "Ready."
@@ -143,7 +143,6 @@ expect_exit 0 hx-ready doctor
 expect_contains "Ready"
 expect_contains "✓ bash"
 expect_contains "✓ go"
-expect_contains "✓ hcl"
 expect_contains "✓ rust"
 expect_lacks "Could not check"
 

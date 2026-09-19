@@ -135,3 +135,19 @@ gofumpt or black without configuring Helix to use it does nothing.
 
 Proposed: only install formatters that Helix reports as missing, which
 means only when the user has configured one. Blocks T-14.
+
+### Q-07 terraform-ls is not a Fedora package
+`sudo dnf install terraform-ls` fails on a clean Fedora 43 ("No match for
+argument"). The copy on the workstation comes from the HashiCorp yum
+repository (`rpm -qi terraform-ls` says Packager: HashiCorp; the `hashicorp`
+repo is enabled). Options: (a) a recipe step that adds the HashiCorp repo
+and its GPG key, then `dnf install terraform-ls`; (b) `go install
+github.com/hashicorp/terraform-ls@latest` into `~/.local/bin`, needing the
+golang package; (c) no recipe, `check terraform` keeps pointing at
+`dnf search terraform-ls`.
+
+Adding a third-party repository is a privileged, persistent system change
+that outlives the tool, which is why this is not decided here. Proposed:
+(b), since it reuses the go-install channel the go recipe already relies
+on and touches nothing outside `~/.local/bin`. Blocks T-15; the answer to
+Q-01 should cover it.

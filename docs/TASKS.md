@@ -17,6 +17,13 @@ releases building a static Linux binary with `-ldflags -X
 
 ## Blocked
 
+### T-15 hcl recipe (terraform-ls)
+`hcl.yaml` with `aliases: [terraform]` and `requires: [terraform-ls]`.
+The alias machinery (D-009) and a synthetic `health-hcl-missing` fixture
+already exist. Blocked on Q-07: terraform-ls is only available from
+HashiCorp's rpm repository or as `go install
+github.com/hashicorp/terraform-ls@latest`.
+
 ### T-09 Recipes wave 2: tools Fedora does not package
 yaml-language-server, typescript-language-server (javascript, typescript),
 vscode-json-language-server (json), docker-langserver (dockerfile) are npm
@@ -107,8 +114,10 @@ Add `rust.yaml` (rust-analyzer, lldb for lldb-dap), `bash.yaml`
 `terraform`). All are plain dnf packages, verified available on Fedora 43.
 Add a test asserting that every `requires` entry is provided by some
 package or command in the same recipe. Can run in parallel with T-04.
-Done 2026-09-19. Package names verified by installing them in the `just vm`
-scenario.
+Done 2026-09-19 for rust and bash, verified by installing them in the
+`just vm` scenario. hcl was pulled out: `terraform-ls` is not in Fedora's
+repositories (dnf: "No match for argument"), it comes from HashiCorp's own
+yum repo. Split into T-15, blocked on Q-07.
 
 ### T-07 `doctor`
 Candidate languages per D-006, one `hx --health <lang>` per candidate,
