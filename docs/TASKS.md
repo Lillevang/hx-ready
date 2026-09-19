@@ -10,13 +10,6 @@ and any new behaviour has a fixture-driven test.
 
 ## Ready
 
-### T-02 `check go` end to end (milestone 1)
-Wire `ExecRunner` → `Parse` → `recipes.Load` in `cmd/check.go` and print
-the layout from CLAUDE.md. Actionable errors for: hx not on PATH, unknown
-language, health command failure. Exit 0 when ready, 1 when not.
-Introduce a small output helper (✓ ✘ ⚠, colour only on a TTY) that later
-commands reuse. Depends on T-01.
-
 ### T-03 No-recipe and wrong-name paths
 `check ocaml` prints what Helix expects, says no recipe exists, and
 suggests `dnf search <binary>` per missing tool. `check terraform`
@@ -101,3 +94,12 @@ Done when every fixture has a table-driven test and `Missing()` returns the
 right binaries for each.
 Done 2026-09-19. Adds D-015 (empty command names are not missing
 executables) and three `-synthetic` fixtures.
+
+### T-02 `check go` end to end (milestone 1)
+Wire `ExecRunner` → `Parse` → `recipes.Load` in `cmd/check.go` and print
+the layout from CLAUDE.md. Actionable errors for: hx not on PATH, unknown
+language, health command failure. Exit 0 when ready, 1 when not.
+Introduce a small output helper (✓ ✘ ⚠, colour only on a TTY) that later
+commands reuse. Depends on T-01.
+Done 2026-09-19. Unknown-language errors already surface Helix's "Did you
+mean" suggestions; T-03 adds aliases and the no-recipe hints.
