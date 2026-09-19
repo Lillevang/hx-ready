@@ -10,11 +10,6 @@ and any new behaviour has a fixture-driven test.
 
 ## Ready
 
-### T-08 CI and release
-GitHub Actions running test, vet and gofmt on push and PR; tagged
-releases building a static Linux binary with `-ldflags -X
-.../cmd.Version`. Needs the git repository to exist first.
-
 ## Blocked
 
 ### T-15 hcl recipe (terraform-ls)
@@ -126,3 +121,11 @@ Fixture: `health-all-languages-table.txt`. Depends on T-01 and T-06.
 Done 2026-09-19. The wide table does list every language server via
 continuation rows (D-006 assumed only the first), but names can be truncated
 and paths are absent, so the per-language check is still needed.
+
+### T-08 CI and release
+GitHub Actions running test, vet and gofmt on push and PR; tagged
+releases building a static Linux binary with `-ldflags -X
+.../cmd.Version`. Needs the git repository to exist first.
+Done 2026-09-19. `ci.yml` runs `just gate`; `release.yml` builds a static
+linux/amd64 binary on `v*` tags. Not exercised until the repo has a GitHub
+remote.

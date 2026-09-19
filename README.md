@@ -14,9 +14,10 @@ hx-ready doctor         # summary across languages
 
 ## Status
 
-`check` works (milestone 1). `install` and `doctor` exit with "not
-implemented". See [docs/TASKS.md](docs/TASKS.md) for the plan and
-[docs/DECISIONS.md](docs/DECISIONS.md) for the reasoning.
+`check`, `install` (with `--dry-run` and `--yes`) and `doctor` work on
+Fedora, with recipes for go, rust and bash. See
+[docs/TASKS.md](docs/TASKS.md) for what is next and
+[docs/DECISIONS.md](docs/DECISIONS.md) for the reasoning and open questions.
 
 ## Development
 

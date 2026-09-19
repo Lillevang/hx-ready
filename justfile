@@ -36,10 +36,10 @@ test:
 build:
     go build ./...
 
-# Build the CLI into ./bin/hx-ready.
+# Build the CLI into ./bin/hx-ready. VERSION=v1.2.3 just bin stamps a version.
 bin:
     mkdir -p bin
-    go build -o bin/hx-ready .
+    CGO_ENABLED=0 go build -ldflags "-X github.com/Lillevang/hx-ready/cmd.Version=${VERSION:-dev}" -o bin/hx-ready .
 
 # End-to-end run in a throwaway Fedora VM (never touches the host). KEEP=1 keeps it.
 vm:

@@ -1,0 +1,33 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build static Linux binary
+        env:
+          CGO_ENABLED: "0"
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+          go build -trimpath \
+            -ldflags "-s -w -X github.com/Lillevang/hx-ready/cmd.Version=${GITHUB_REF_NAME}" \
+            -o hx-ready-linux-amd64 .
+          ./hx-ready-linux-amd64 version
+          sha256sum hx-ready-linux-amd64 > hx-ready-linux-amd64.sha256
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            hx-ready-linux-amd64
+            hx-ready-linux-amd64.sha256
