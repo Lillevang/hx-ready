@@ -77,12 +77,12 @@ func TestCheck(t *testing.T) {
 			wantAbsent: []string{"Ready.", "Editor support", "\x1b["},
 		},
 		{
-			name:     "rust ready without a recipe",
+			name:     "rust ready",
 			runner:   fakeRunner{fixture: "health-rust-ready.txt"},
 			language: "rust",
 			wantCode: ExitOK,
 			wantOut: []string{
-				"rust\n",
+				"Rust\n",
 				"  ✓ rust-analyzer\n  ✓ lldb-dap\n  ✓ highlighting\n  ✓ textobjects\n  ✓ indentation\n",
 				"Ready.\n",
 			},
@@ -103,14 +103,32 @@ func TestCheck(t *testing.T) {
 			wantAbsent: []string{"Suggested installation"},
 		},
 		{
-			// No hcl recipe is bundled yet (T-06), so "terraform" reaches
-			// Helix unchanged and Helix's own suggestions are shown. Note
-			// that Helix does not suggest hcl; the alias is what fixes this.
-			name:     "terraform without an hcl recipe",
-			runner:   fakeRunner{fixture: "health-terraform-unknown.txt"},
+			// Helix does not know "terraform" and does not suggest hcl
+			// either, so the bundled hcl recipe's alias is the only path.
+			name:     "terraform resolves to hcl",
+			runner:   fakeRunner{fixture: "health-hcl-missing-synthetic.txt"},
 			language: "terraform",
 			wantCode: ExitError,
-			wantErr:  []string{`Helix does not know language "terraform".`, "Did you mean one of these?\n  toml, textproto"},
+			wantOut: []string{
+				"\"terraform\" is Helix's \"hcl\" language; checking hcl.\n\nHCL (Terraform)\n",
+				"  ✘ terraform-ls\n",
+				"  sudo dnf install -y terraform-ls\n",
+				"hx --health hcl",
+			},
+		},
+		{
+			name:     "rust ready with a recipe",
+			runner:   fakeRunner{fixture: "health-rust-ready.txt"},
+			language: "rust",
+			wantCode: ExitOK,
+			wantOut:  []string{"Rust\n", "Ready.\n"},
+		},
+		{
+			name:     "bash ready",
+			runner:   fakeRunner{fixture: "health-bash-ready.txt"},
+			language: "bash",
+			wantCode: ExitOK,
+			wantOut:  []string{"Bash\n", "  ✓ bash-language-server\n", "Ready.\n"},
 		},
 		{
 			name:     "debug adapter without a command is a warning",

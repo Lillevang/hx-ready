@@ -72,9 +72,11 @@ expect_exit 1 hx-ready check ocaml
 expect_contains "No hx-ready installation recipe exists yet"
 expect_contains "dnf search ocamllsp"
 
-# T-03: terraform is not a Helix language; hcl is (alias lands with T-06).
-step "T-03: check terraform"
+# T-03/T-06: terraform is not a Helix language; the hcl recipe's alias is.
+step "T-03: check terraform resolves to hcl"
 expect_exit 1 hx-ready check terraform
+expect_contains '"terraform" is Helix'"'"'s "hcl" language; checking hcl.'
+expect_contains "sudo dnf install -y terraform-ls"
 
 # T-04: dry run prints the plan and changes nothing.
 step "T-04: install go --dry-run"
@@ -126,6 +128,14 @@ step "T-05: PATH hint when ~/.local/bin is not on PATH"
 expect_exit 1 env PATH=/usr/local/bin:/usr/bin:/bin "$HOME/.local/bin/hx-ready" check go
 expect_contains "golangci-lint-langserver exists in /home/test/.local/bin"
 expect_contains 'export PATH="$HOME/.local/bin:$PATH"'
+
+# T-06: recipes wave 1, all plain dnf packages.
+for lang in bash hcl rust; do
+  step "T-06: install $lang --yes"
+  expect_exit 0 hx-ready install "$lang" --yes
+  expect_contains "Ready."
+  expect_exit 0 bash -c "! hx --health $lang | grep -q ✘"
+done
 
 echo
 if [ "$fail" -eq 0 ]; then

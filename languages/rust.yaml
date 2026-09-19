@@ -1,0 +1,23 @@
+# Recipe for Helix's "rust" language.
+#
+# Helix wants (hx --health rust):
+#   language server: rust-analyzer
+#   debug adapter:   lldb-dap
+#   formatter:       none configured
+#
+# Fedora's rust-analyzer package pulls in the toolchain it needs (cargo,
+# rust-src). lldb-dap ships inside the lldb package.
+language: rust
+display_name: Rust
+
+requires:
+  language_servers:
+    - rust-analyzer
+  debug_adapters:
+    - lldb-dap
+
+fedora:
+  packages:
+    - name: rust-analyzer
+    - name: lldb
+      provides: [lldb-dap]

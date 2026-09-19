@@ -1,0 +1,17 @@
+# Recipe for Helix's "bash" language.
+#
+# Helix wants (hx --health bash):
+#   language server: bash-language-server
+#   debug adapter:   none configured
+#   formatter:       none configured
+language: bash
+display_name: Bash
+
+requires:
+  language_servers:
+    - bash-language-server
+
+fedora:
+  packages:
+    - name: nodejs-bash-language-server
+      provides: [bash-language-server]

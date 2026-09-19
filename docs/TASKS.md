@@ -10,13 +10,6 @@ and any new behaviour has a fixture-driven test.
 
 ## Ready
 
-### T-06 Recipes wave 1: Fedora-packaged languages
-Add `rust.yaml` (rust-analyzer, lldb for lldb-dap), `bash.yaml`
-(nodejs-bash-language-server), `hcl.yaml` (terraform-ls, alias
-`terraform`). All are plain dnf packages, verified available on Fedora 43.
-Add a test asserting that every `requires` entry is provided by some
-package or command in the same recipe. Can run in parallel with T-04.
-
 ### T-07 `doctor`
 Candidate languages per D-006, one `hx --health <lang>` per candidate,
 grouped output (Ready / Partially configured) per CLAUDE.md, `--all` flag.
@@ -112,3 +105,12 @@ installed to `~/.local/bin` but Helix still cannot see it (D-007).
 Depends on T-04.
 Done 2026-09-19. The PATH hint lives in the `check` view so it shows both
 after an install and on a plain `check`. Verified end to end with `just vm`.
+
+### T-06 Recipes wave 1: Fedora-packaged languages
+Add `rust.yaml` (rust-analyzer, lldb for lldb-dap), `bash.yaml`
+(nodejs-bash-language-server), `hcl.yaml` (terraform-ls, alias
+`terraform`). All are plain dnf packages, verified available on Fedora 43.
+Add a test asserting that every `requires` entry is provided by some
+package or command in the same recipe. Can run in parallel with T-04.
+Done 2026-09-19. Package names verified by installing them in the `just vm`
+scenario.

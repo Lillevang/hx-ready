@@ -1,0 +1,20 @@
+# Recipe for Helix's "hcl" language, which is what Helix uses for Terraform
+# files. There is no "terraform" language in Helix, and its "did you mean"
+# list does not point at hcl, hence the alias (D-009).
+#
+# Helix wants (hx --health hcl):
+#   language server: terraform-ls
+#   debug adapter:   none configured
+#   formatter:       none configured
+language: hcl
+display_name: HCL (Terraform)
+aliases:
+  - terraform
+
+requires:
+  language_servers:
+    - terraform-ls
+
+fedora:
+  packages:
+    - name: terraform-ls

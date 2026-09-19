@@ -24,6 +24,61 @@ func TestAllBundledRecipesLoad(t *testing.T) {
 	}
 }
 
+// TestRequiresAreProvided asserts that every executable a recipe requires is
+// provided by a package or command in the same recipe, so "install" can
+// never leave a required tool uncovered.
+func TestRequiresAreProvided(t *testing.T) {
+	names, err := Languages()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range names {
+		r, err := Load(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		provided := map[string]bool{}
+		for _, p := range r.Fedora.Packages {
+			for _, e := range p.Executables() {
+				provided[e] = true
+			}
+		}
+		for _, c := range r.Fedora.Commands {
+			for _, e := range c.Provides {
+				provided[e] = true
+			}
+		}
+		if len(r.Requires.All()) == 0 {
+			t.Errorf("%s: requires is empty", name)
+		}
+		for _, req := range r.Requires.All() {
+			if !provided[req] {
+				t.Errorf("%s: requires %q but nothing in the recipe provides it", name, req)
+			}
+		}
+	}
+}
+
+func TestBundledRecipes(t *testing.T) {
+	names, err := Languages()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(names, ","); got != "bash,go,hcl,rust" {
+		t.Errorf("Languages() = %s, want bash,go,hcl,rust", got)
+	}
+	hcl, err := Load("hcl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lang, _, err := Resolve("terraform"); err != nil || lang != "hcl" {
+		t.Errorf("Resolve(terraform) = %q, %v; want hcl", lang, err)
+	}
+	if got := strings.Join(hcl.Aliases, ","); got != "terraform" {
+		t.Errorf("hcl aliases = %q", got)
+	}
+}
+
 func TestLoadGo(t *testing.T) {
 	r, err := Load("go")
 	if err != nil {
