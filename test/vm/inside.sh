@@ -72,11 +72,11 @@ expect_exit 1 hx-ready check ocaml
 expect_contains "No hx-ready installation recipe exists yet"
 expect_contains "dnf search ocamllsp"
 
-# T-03: terraform is not a Helix language; an hcl recipe alias would fix
-# this but is blocked on Q-07 (terraform-ls is not in Fedora's repos).
-step "T-03: check terraform"
+# T-03/T-15: terraform is not a Helix language; the hcl recipe's alias is.
+step "T-03: check terraform resolves to hcl"
 expect_exit 1 hx-ready check terraform
-expect_contains 'Helix does not know language "terraform"'
+expect_contains '"terraform" is Helix'"'"'s "hcl" language; checking hcl.'
+expect_contains "go install github.com/hashicorp/terraform-ls@latest"
 
 # T-04: dry run prints the plan and changes nothing.
 step "T-04: install go --dry-run"
@@ -145,6 +145,13 @@ for lang in yaml typescript json dockerfile; do
   expect_contains "Ready."
   expect_exit 0 bash -c "! hx --health $lang | grep -q ✘"
 done
+# T-15: terraform-ls built from source into ~/.local/bin (D-021).
+step "T-15: install terraform --yes (alias of hcl)"
+expect_exit 0 hx-ready install terraform --yes
+expect_contains "go install github.com/hashicorp/terraform-ls@latest"
+expect_contains "Ready."
+expect_exit 0 bash -c 'test -x ~/.local/bin/terraform-ls && ! hx --health hcl | grep -q ✘'
+
 step "T-09: javascript shares typescript's server, so nothing to install"
 expect_exit 0 hx-ready install javascript --yes
 expect_contains "Nothing to install."
@@ -171,6 +178,8 @@ expect_contains "✓ bash"
 expect_contains "✓ go"
 expect_contains "✓ rust"
 expect_contains "✓ python"
+expect_contains "✓ hcl"
+expect_contains "✓ yaml"
 expect_contains "⚠ c"
 expect_contains "missing clangd"
 expect_lacks "Could not check"

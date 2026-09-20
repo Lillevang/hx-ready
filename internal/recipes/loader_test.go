@@ -64,9 +64,12 @@ func TestBundledRecipes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "bash,dockerfile,go,javascript,json,python,rust,typescript,yaml"
+	want := "bash,dockerfile,go,hcl,javascript,json,python,rust,typescript,yaml"
 	if got := strings.Join(names, ","); got != want {
 		t.Errorf("Languages() = %s, want %s", got, want)
+	}
+	if lang, r, err := Resolve("terraform"); err != nil || lang != "hcl" || r.Language != "hcl" {
+		t.Errorf("Resolve(terraform) = %q, %v; want hcl", lang, err)
 	}
 }
 

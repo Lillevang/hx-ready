@@ -1,0 +1,29 @@
+# Recipe for Helix's "hcl" language, which is what Helix uses for Terraform
+# files. There is no "terraform" language in Helix, and its "did you mean"
+# list does not point at hcl, hence the alias (D-009).
+#
+# Helix wants (hx --health hcl):
+#   language server: terraform-ls
+#
+# terraform-ls is not in Fedora's repositories; HashiCorp ships it in their
+# own rpm repo, which hx-ready does not add. It is a Go program, so it is
+# built from source into ~/.local/bin instead (D-021).
+language: hcl
+display_name: HCL (Terraform)
+aliases:
+  - terraform
+
+requires:
+  language_servers:
+    - terraform-ls
+
+fedora:
+  packages:
+    - name: golang
+      provides: [go]
+  commands:
+    - provides: [terraform-ls]
+      env:
+        GOBIN: ${HOME}/.local/bin
+      args: [go, install, github.com/hashicorp/terraform-ls@latest]
+      needs: [go]

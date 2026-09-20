@@ -127,14 +127,19 @@ func TestCheck(t *testing.T) {
 			wantAbsent: []string{"Suggested installation"},
 		},
 		{
-			// No hcl recipe is bundled (blocked on Q-07), so "terraform"
-			// reaches Helix unchanged. Helix does not suggest hcl either;
-			// only a recipe alias can fix this (see TestCheckAlias).
-			name:     "terraform without an hcl recipe",
-			runner:   fakeRunner{fixture: "health-terraform-unknown.txt"},
+			// Helix does not know "terraform" and does not even suggest hcl
+			// (health-terraform-unknown.txt), so the bundled hcl recipe's
+			// alias is the only path.
+			name:     "terraform resolves to hcl",
+			runner:   fakeRunner{fixture: "health-hcl-missing-synthetic.txt"},
 			language: "terraform",
 			wantCode: ExitError,
-			wantErr:  []string{`Helix does not know language "terraform".`, "Did you mean one of these?\n  toml, textproto"},
+			wantOut: []string{
+				"\"terraform\" is Helix's \"hcl\" language; checking hcl.\n\nHCL (Terraform)\n",
+				"  ✘ terraform-ls\n",
+				"  sudo dnf install -y golang\n\n  GOBIN=/home/tester/.local/bin \\\n    go install github.com/hashicorp/terraform-ls@latest\n",
+				"hx --health hcl",
+			},
 		},
 		{
 			name:     "rust ready with a recipe",

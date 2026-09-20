@@ -12,11 +12,6 @@ and any new behaviour has a fixture-driven test.
 
 Unblocked 2026-09-20 by D-016 to D-021.
 
-### T-15 hcl recipe (terraform-ls)
-`hcl.yaml` with `aliases: [terraform]` and `go install
-github.com/hashicorp/terraform-ls@latest` per D-021. The alias machinery
-and the `health-hcl-missing-synthetic` fixture exist.
-
 ### T-13 Ubuntu/Debian platform
 Per D-019: `debian` block in the recipe model, `installer.Debian` using
 `apt-get install -y`, platform detection from `/etc/os-release` replacing
@@ -150,3 +145,9 @@ dockerfile-language-server-nodejs). Commands use `npm install -g` with
 (D-007, D-016); `needs: [npm]` pulls in `nodejs-npm`. Verify in `just vm`.
 Done 2026-09-20. Real fixtures captured for typescript, json and
 dockerfile. Verified in `just vm`.
+
+### T-15 hcl recipe (terraform-ls)
+`hcl.yaml` with `aliases: [terraform]` and `go install
+github.com/hashicorp/terraform-ls@latest` per D-021. The alias machinery
+and the `health-hcl-missing-synthetic` fixture exist.
+Done 2026-09-20. Verified in `just vm`.
