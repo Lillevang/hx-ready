@@ -23,9 +23,9 @@ fedora:
       provides: [lldb-dap]
 
 # Ubuntu 24.04 does not package rust-analyzer; it comes from rustup (D-024).
-# "rustup default stable" installs a toolchain and makes it the default,
-# which a fresh machine needs before any proxy in ~/.cargo/bin works. It
-# only runs when rust-analyzer is missing.
+# Initialise rustup only when it has no active toolchain. An existing cargo
+# executable may belong to the distro or be an unconfigured rustup proxy.
+# Preserve the user's default and project overrides (D-025).
 debian:
   packages:
     - name: rustup
@@ -34,12 +34,15 @@ debian:
       # the plain name Helix wants is created below.
       provides: [lldb]
   commands:
-    - provides: [cargo, rustc]
-      args: [rustup, default, stable]
-      needs: [rustup]
     - provides: [rust-analyzer]
-      args: [rustup, component, add, rust-analyzer]
-      needs: [rustup, cargo]
+      # A conditional needs the explicit shell form (D-010). Keep setup in
+      # this step so a cargo on PATH cannot cause it to be skipped.
+      shell: |
+        if ! rustup show active-toolchain >/dev/null 2>&1; then
+          rustup default stable || exit $?
+        fi
+        rustup component add rust-analyzer
+      needs: [rustup]
     - provides: [lldb-dap]
       # shell form (D-010) because the LLVM version differs per release and
       # a glob is needed to find it. User-level symlink only (D-007).
