@@ -1,0 +1,35 @@
+# Recipe for Helix's "astro" language.
+#
+# Helix wants (hx --health astro):
+#   language server: astro-ls
+#
+# astro-ls is the binary in the @astrojs/language-server npm package. It
+# needs a TypeScript install to offer TypeScript features, so typescript
+# is installed alongside, as for the typescript recipe (D-016).
+language: astro
+display_name: Astro
+
+requires:
+  language_servers:
+    - astro-ls
+
+fedora:
+  packages:
+    - name: nodejs-npm
+      provides: [npm]
+  commands:
+    - provides: [astro-ls]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, "@astrojs/language-server", typescript]
+      needs: [npm]
+
+debian:
+  packages:
+    - name: npm
+  commands:
+    - provides: [astro-ls]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, "@astrojs/language-server", typescript]
+      needs: [npm]

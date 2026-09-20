@@ -37,6 +37,7 @@ func doctorRunner() mapRunner {
 		"yaml":       "health-yaml-missing.txt",
 		"json":       "health-json-missing.txt",
 		"dockerfile": "health-dockerfile-missing.txt",
+		"astro":      "health-astro-missing.txt",
 	}
 }
 
@@ -50,7 +51,7 @@ func TestDoctor(t *testing.T) {
 	}
 	for _, w := range []string{
 		"Ready\n\n  ✓ bash\n  ✓ hcl\n  ✓ rust\n",
-		"Partially configured\n\n  ⚠ dockerfile\n      missing docker-langserver\n      hx-ready install dockerfile\n",
+		"Partially configured\n\n  ⚠ astro\n      missing astro-ls\n      hx-ready install astro\n  ⚠ dockerfile\n      missing docker-langserver\n      hx-ready install dockerfile\n",
 		"  ⚠ go\n      missing gopls\n      missing golangci-lint-lsp\n      missing dlv\n      hx-ready install go\n",
 		"  ⚠ python\n      ty not covered by the recipe\n      jedi not covered by the recipe\n      missing pylsp\n      hx-ready install python\n",
 		"  ⚠ javascript\n      missing typescript-language-server\n      debug adapter has no command configured\n      hx-ready install javascript\n",

@@ -178,7 +178,7 @@ if [ "$RUST_ON_THIS_DISTRO" = 1 ]; then
 fi
 
 # T-09: npm recipes. Binaries land in ~/.local/bin via npm_config_prefix.
-for lang in yaml typescript json dockerfile; do
+for lang in yaml typescript json dockerfile astro; do
   step "T-09: install $lang --yes"
   expect_exit 0 hx-ready install "$lang" --yes
   expect_contains "npm_config_prefix=/home/test/.local"
@@ -196,7 +196,7 @@ expect_exit 0 hx-ready check hcl
 step "T-09: javascript shares typescript's server, so nothing to install"
 expect_exit 0 hx-ready install javascript --yes
 expect_contains "Nothing to install."
-expect_exit 0 bash -c 'ls ~/.local/bin/yaml-language-server ~/.local/bin/typescript-language-server ~/.local/bin/vscode-json-language-server ~/.local/bin/docker-langserver'
+expect_exit 0 bash -c 'ls ~/.local/bin/yaml-language-server ~/.local/bin/typescript-language-server ~/.local/bin/vscode-json-language-server ~/.local/bin/docker-langserver ~/.local/bin/astro-ls'
 expect_exit 0 bash -c '! command -v npm | grep -q local'   # npm itself came from the distro
 
 # T-10: python requires only ruff and pylsp (D-017); ty and jedi stay

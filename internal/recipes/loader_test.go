@@ -77,7 +77,7 @@ func TestBundledRecipes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "bash,dockerfile,go,hcl,javascript,json,python,rust,typescript,yaml"
+	want := "astro,bash,dockerfile,go,hcl,javascript,json,python,rust,typescript,yaml"
 	if got := strings.Join(names, ","); got != want {
 		t.Errorf("Languages() = %s, want %s", got, want)
 	}

@@ -74,6 +74,7 @@ func TestInstallDryRunNpm(t *testing.T) {
 		"javascript": "npm install -g typescript-language-server typescript",
 		"json":       "npm install -g vscode-langservers-extracted",
 		"dockerfile": "npm install -g dockerfile-language-server-nodejs",
+		"astro":      "npm install -g @astrojs/language-server typescript",
 	}
 	fixtures := map[string]string{
 		"yaml":       "health-yaml-missing.txt",
@@ -81,6 +82,7 @@ func TestInstallDryRunNpm(t *testing.T) {
 		"javascript": "health-javascript-empty-debugger.txt",
 		"json":       "health-json-missing.txt",
 		"dockerfile": "health-dockerfile-missing.txt",
+		"astro":      "health-astro-missing.txt",
 	}
 	for lang, cmd := range cases {
 		useRunner(t, fakeRunner{fixture: fixtures[lang]}, nil)

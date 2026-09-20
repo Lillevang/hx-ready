@@ -221,6 +221,18 @@ func TestParseFixtures(t *testing.T) {
 			wantMissing: []string{"typescript-language-server"},
 		},
 		{
+			fixture:  "health-astro-missing.txt",
+			language: "astro",
+			want: Health{
+				Language:        "astro",
+				LanguageServers: []Tool{missing("astro-ls", "astro-ls")},
+				DebugAdapter:    none,
+				Formatter:       none,
+				Parser:          StatusOK, Highlight: StatusOK, Textobjects: StatusMissing, Indent: StatusMissing,
+			},
+			wantMissing: []string{"astro-ls"},
+		},
+		{
 			fixture:  "health-json-missing.txt",
 			language: "json",
 			want: Health{

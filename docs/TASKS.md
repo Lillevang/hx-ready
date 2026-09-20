@@ -178,3 +178,8 @@ block adds a user-level symlink in `~/.local/bin` via the `shell:` escape
 hatch (a glob keeps it LLVM-version independent). Verified with
 `just vm-ubuntu`. `INSIDE='cmd' bash test/vm.sh` was added for this kind
 of exploration.
+
+### T-18 Astro recipe
+Added 2026-09-20 on request, outside the MVP list: `astro-ls` from the
+`@astrojs/language-server` npm package, plus typescript. Real fixture
+captured; verified in `just vm`.

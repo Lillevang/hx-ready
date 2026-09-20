@@ -93,6 +93,7 @@ func TestParseFixturesExist(t *testing.T) {
 		"health-rust-missing-synthetic.txt",
 		"health-python-ready-uncovered-synthetic.txt",
 		"health-typescript-missing.txt",
+		"health-astro-missing.txt",
 		"health-json-missing.txt",
 		"health-dockerfile-missing.txt",
 	}
