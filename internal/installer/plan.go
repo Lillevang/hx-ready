@@ -116,12 +116,14 @@ func (s Step) String() string {
 var ErrNoPlatformBlock = errors.New("recipe has no block for this platform")
 
 // Build makes the plan for a recipe on a platform given the executables
-// currently missing. Packages are grouped into a single package-manager
-// step (D-011); commands become one step each, ordered so that their Needs
-// are satisfied. Steps that provide nothing from missing are left out,
-// except that a package is kept when an included command needs one of its
-// executables (installing an already-present package is a no-op).
-func Build(p Platform, r *recipes.Recipe, missing []string) (*Plan, error) {
+// currently missing and a way to ask whether an executable is present.
+// Packages are grouped into a single package-manager step (D-011);
+// commands become one step each, ordered so that their Needs are
+// satisfied. Steps that provide nothing from missing are left out, except
+// that a provider is kept when an included command needs one of its
+// executables and that executable is not already on PATH (an npm from
+// nvm, a go from /usr/local, ...): hx-ready installs only what is absent.
+func Build(p Platform, r *recipes.Recipe, missing []string, have func(exe string) bool) (*Plan, error) {
 	block := p.Block(r)
 	if block == nil {
 		return nil, fmt.Errorf("%w: %s has no %s block", ErrNoPlatformBlock, r.Language, p.Name)
@@ -129,9 +131,9 @@ func Build(p Platform, r *recipes.Recipe, missing []string) (*Plan, error) {
 	want := toSet(missing)
 
 	// Commands that provide something missing, plus commands that provide
-	// something those commands need, until nothing new is pulled in.
-	// Executables the chosen commands rely on are also collected so the
-	// packages providing them are kept.
+	// something those commands need and is absent, until nothing new is
+	// pulled in. Absent executables the chosen commands rely on are also
+	// collected so the packages providing them are kept.
 	needed := map[string]bool{}
 	chosen := make([]bool, len(block.Commands))
 	for changed := true; changed; {
@@ -143,7 +145,9 @@ func Build(p Platform, r *recipes.Recipe, missing []string) (*Plan, error) {
 			chosen[i] = true
 			changed = true
 			for _, n := range c.Needs {
-				needed[n] = true
+				if !have(n) {
+					needed[n] = true
+				}
 			}
 		}
 	}

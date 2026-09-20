@@ -95,6 +95,22 @@ func TestInstallDryRunNpm(t *testing.T) {
 	}
 }
 
+// With npm already on PATH (nvm, for instance) the npm package is not
+// installed just to install an npm package.
+func TestInstallDryRunNpmPresent(t *testing.T) {
+	t.Setenv("HOME", "/home/tester")
+	havePath(t, "npm")
+	useRunner(t, fakeRunner{fixture: "health-typescript-missing.txt"}, nil)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"install", "typescript", "--dry-run"}, &stdout, &stderr); code != ExitOK {
+		t.Errorf("exit = %d, want 0; stderr: %s", code, stderr.String())
+	}
+	want := "Would run:\n\n  npm_config_prefix=/home/tester/.local \\\n    npm install -g typescript-language-server typescript\n"
+	if stdout.String() != want {
+		t.Errorf("stdout:\n%s\nwant:\n%s", stdout.String(), want)
+	}
+}
+
 func TestInstallReady(t *testing.T) {
 	useRunner(t, fakeRunner{fixture: "health-go-formatter-found-synthetic.txt"}, nil)
 	var stdout, stderr bytes.Buffer

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -76,6 +77,14 @@ func resolveLanguage(p *printer, stderr io.Writer, language string) (string, *re
 	return canonical, recipe
 }
 
+// onPath reports whether an executable is available, so plans skip
+// toolchains the user already has. A variable so tests are machine
+// independent.
+var onPath = func(exe string) bool {
+	_, err := exec.LookPath(exe)
+	return err == nil
+}
+
 // platformFor picks the platform whose recipe block to use. check works
 // anywhere Helix runs (D-008), so on an unrecognised system it falls back
 // to Fedora and says so; install refuses instead.
@@ -96,7 +105,7 @@ func planFor(stderr io.Writer, plat installer.Platform, recipe *recipes.Recipe, 
 	if recipe == nil {
 		return nil, ExitOK
 	}
-	plan, err := installer.Build(plat, recipe, v.missing)
+	plan, err := installer.Build(plat, recipe, v.missing, onPath)
 	if errors.Is(err, installer.ErrNoPlatformBlock) {
 		return &installer.Plan{Uncovered: v.missing}, ExitOK
 	}
