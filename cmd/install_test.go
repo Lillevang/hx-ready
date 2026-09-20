@@ -340,7 +340,7 @@ func TestCheckPathHintCargo(t *testing.T) {
 	}
 }
 
-// TestInstallDryRunRustUbuntu: rustup steps in order (D-024).
+// TestInstallDryRunRustUbuntu: conditional setup is visible (D-025).
 func TestInstallDryRunRustUbuntu(t *testing.T) {
 	t.Setenv("HOME", "/home/tester")
 	usePlatform(t, "ubuntu", "debian")
@@ -349,7 +349,9 @@ func TestInstallDryRunRustUbuntu(t *testing.T) {
 	if code := Run([]string{"install", "rust", "--dry-run"}, &stdout, &stderr); code != ExitOK {
 		t.Errorf("exit = %d, want 0; stderr: %s", code, stderr.String())
 	}
-	want := "Would run:\n\n  sudo apt-get install -y rustup lldb\n\n  rustup default stable\n\n  rustup component add rust-analyzer\n\n" +
+	want := "Would run:\n\n  sudo apt-get install -y rustup lldb\n\n" +
+		"  if ! rustup show active-toolchain >/dev/null 2>&1; then\n" +
+		"    rustup default stable || exit $?\n  fi\n  rustup component add rust-analyzer\n\n" +
 		"  mkdir -p \"$HOME/.local/bin\" && ln -sf \"$(ls /usr/lib/llvm-*/bin/lldb-dap | sort -V | tail -1)\" \"$HOME/.local/bin/lldb-dap\"\n"
 	if stdout.String() != want {
 		t.Errorf("stdout:\n%s\nwant:\n%s", stdout.String(), want)

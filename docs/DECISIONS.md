@@ -143,6 +143,15 @@ PATH hint also looks there. Debian-family lldb packages install only a
 versioned `lldb-dap-N`; the recipe symlinks it to `~/.local/bin/lldb-dap`.
 Decided 2026-09-20.
 
+### D-025 Rustup setup checks the active toolchain
+When installing rust-analyzer on Debian-family systems, check
+`rustup show active-toolchain` rather than the presence of `cargo`.
+An existing distro executable or rustup proxy does not prove a toolchain
+is configured. Initialise stable only when no active toolchain exists;
+otherwise preserve the user's default or project override. Keep the check
+and component installation in one recipe step so PATH-based prerequisite
+filtering cannot skip setup. This refines D-024. Decided 2026-09-20.
+
 ## Open questions
 
 Each entry states what it blocks and a proposed default. Answering one
