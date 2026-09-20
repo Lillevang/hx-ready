@@ -189,3 +189,13 @@ of exploration.
 Added 2026-09-20 on request, outside the MVP list: `astro-ls` from the
 `@astrojs/language-server` npm package, plus typescript. Real fixture
 captured; verified in `just vm`.
+
+### T-19 Release packaging
+Replaces T-08's single-binary release. `scripts/release.sh` builds
+`hx-ready_<version>_linux_{amd64,arm64}.tar.gz` (static binary + README,
+reproducible tar) and `SHA256SUMS`; the release workflow runs the gate
+first, verifies the checksums and the amd64 binary, attaches a GitHub
+build-provenance attestation, and creates the release with generated
+notes. `just release <version>` runs the same script locally. Done
+2026-09-20. No LICENSE file exists yet; the script includes one when it
+appears.

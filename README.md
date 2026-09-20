@@ -12,6 +12,24 @@ hx-ready install go     # install it (asks first; --dry-run to only print)
 hx-ready doctor         # summary across languages
 ```
 
+## Install
+
+Releases ship a static Linux binary for amd64 and arm64 as
+`hx-ready_<version>_linux_<arch>.tar.gz`, with a `SHA256SUMS` file and a
+GitHub build-provenance attestation.
+
+```
+v=v0.1.0
+curl -fsSLO "https://github.com/Lillevang/hx-ready/releases/download/$v/hx-ready_${v}_linux_amd64.tar.gz"
+curl -fsSLO "https://github.com/Lillevang/hx-ready/releases/download/$v/SHA256SUMS"
+sha256sum --ignore-missing -c SHA256SUMS
+gh attestation verify "hx-ready_${v}_linux_amd64.tar.gz" --repo Lillevang/hx-ready   # optional
+tar -xzf "hx-ready_${v}_linux_amd64.tar.gz"
+install -m 0755 "hx-ready_${v}_linux_amd64/hx-ready" ~/.local/bin/
+```
+
+Or build from source with `just bin`.
+
 ## Status
 
 `check`, `install` (with `--dry-run` and `--yes`) and `doctor` work on
@@ -28,6 +46,7 @@ Helix install are needed only to run the binary, not the tests.
 ```
 just gate        # gofmt, vet, test, build: must pass before every PR
 just bin         # build ./bin/hx-ready
+just release v0.1.0   # build ./dist packages and SHA256SUMS as the release workflow does
 just vm          # end-to-end run in a throwaway Fedora VM (qemu+kvm)
 just vm-ubuntu   # the same scenario on Ubuntu 24.04
 ```
