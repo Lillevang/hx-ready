@@ -77,8 +77,8 @@ const (
 // all (ErrUnexpectedOutput).
 //
 // Lines the parser does not recognise are skipped so that a newer Helix
-// adding a row does not break the tool; a health report is recognised by
-// its first line.
+// adding a row does not break the tool. External-tool sections must be
+// complete and understood before their health can be trusted.
 func Parse(language, output string) (*Health, error) {
 	lines := nonEmptyLines(StripANSI(output))
 	if len(lines) == 0 {
@@ -92,6 +92,7 @@ func Parse(language, output string) (*Health, error) {
 	}
 
 	h := &Health{Language: language}
+	serversNone := false
 	cur := sectionNone
 	for _, line := range lines {
 		// Indented lines are items under the current header.
@@ -114,6 +115,7 @@ func Parse(language, output string) (*Health, error) {
 		case strings.HasPrefix(line, serversHeader):
 			cur = sectionServers
 			if rest(line, serversHeader) == "None" {
+				serversNone = true
 				cur = sectionNone // nothing configured; no items follow
 			}
 		case strings.HasPrefix(line, debuggerHeader):
@@ -144,6 +146,9 @@ func Parse(language, output string) (*Health, error) {
 			// Unknown top-level line: tolerate it, but it ends any item list.
 			cur = sectionNone
 		}
+	}
+	if (!serversNone && len(h.LanguageServers) == 0) || !h.ToolsKnown() {
+		return nil, fmt.Errorf("%w: incomplete or unrecognised external-tool status", ErrUnexpectedOutput)
 	}
 	return h, nil
 }

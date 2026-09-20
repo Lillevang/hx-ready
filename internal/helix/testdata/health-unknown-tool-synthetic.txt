@@ -1,0 +1,8 @@
+Configured language servers:
+  ? gopls: unexpected status
+Configured debug adapter: None
+Configured formatter: None
+Tree-sitter parser: ✓
+Highlight queries: ✓
+Textobject queries: ✓
+Indent queries: ✓

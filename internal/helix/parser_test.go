@@ -324,10 +324,12 @@ func TestParseUnknownLanguageTerraform(t *testing.T) {
 
 func TestParseUnexpected(t *testing.T) {
 	cases := map[string]string{
-		"garbage fixture": fixture(t, "health-garbage.txt"),
-		"empty":           "",
-		"whitespace only": "  \n\t\n",
-		"wide table":      fixture(t, "health-all-languages-table.txt"),
+		"incomplete report": fixture(t, "health-incomplete-synthetic.txt"),
+		"unknown tool":      fixture(t, "health-unknown-tool-synthetic.txt"),
+		"garbage fixture":   fixture(t, "health-garbage.txt"),
+		"empty":             "",
+		"whitespace only":   "  \n\t\n",
+		"wide table":        fixture(t, "health-all-languages-table.txt"),
 		"indent before any header": "Configured language servers: None\n" +
 			"Tree-sitter parser: ✓\n" +
 			"  ✓ orphan: /usr/bin/orphan\n",
@@ -343,13 +345,12 @@ func TestParseUnexpected(t *testing.T) {
 }
 
 // TestParseTolerant documents the leniency rules: unknown top-level lines
-// are skipped and an unknown mark yields StatusUnknown rather than an error.
+// are skipped and unknown query marks remain warnings.
 func TestParseTolerant(t *testing.T) {
 	in := "Configured language servers:\n" +
 		"  ✓ gopls: /usr/bin/gopls\n" +
 		"Some new row Helix added: ✓\n" +
-		"Configured debug adapter:\n" +
-		"  ? something odd\n" +
+		"Configured debug adapter: None\n" +
 		"Configured formatter: None\n" +
 		"Tree-sitter parser: ✓\n" +
 		"Highlight queries: ?\n"
@@ -360,8 +361,8 @@ func TestParseTolerant(t *testing.T) {
 	if len(h.LanguageServers) != 1 || h.LanguageServers[0].Status != StatusOK {
 		t.Errorf("language servers = %+v", h.LanguageServers)
 	}
-	if h.DebugAdapter.Status != StatusUnknown {
-		t.Errorf("DebugAdapter.Status = %v, want unknown", h.DebugAdapter.Status)
+	if h.DebugAdapter.Status != StatusNone {
+		t.Errorf("DebugAdapter.Status = %v, want none", h.DebugAdapter.Status)
 	}
 	if h.Highlight != StatusUnknown || h.Textobjects != StatusUnknown {
 		t.Errorf("Highlight = %v, Textobjects = %v, want unknown", h.Highlight, h.Textobjects)

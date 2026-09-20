@@ -85,7 +85,21 @@ func (h *Health) Missing() []string {
 // not configured at all (StatusNone) does not count against readiness; see
 // docs/DECISIONS.md, D-005.
 func (h *Health) Ready() bool {
-	return len(h.Missing()) == 0
+	return h.ToolsKnown() && len(h.Missing()) == 0
+}
+
+// ToolsKnown reports whether every external-tool slot was understood.
+// Unknown tree-sitter rows do not affect external-tool readiness.
+func (h *Health) ToolsKnown() bool {
+	if h.DebugAdapter.Status == StatusUnknown || h.Formatter.Status == StatusUnknown {
+		return false
+	}
+	for _, t := range h.LanguageServers {
+		if t.Status == StatusUnknown {
+			return false
+		}
+	}
+	return true
 }
 
 // Sentinel errors. Callers should print an actionable message for each.
