@@ -37,7 +37,7 @@ debian:
     - provides: [rust-analyzer]
       # A conditional needs the explicit shell form (D-010). Keep setup in
       # this step so a cargo on PATH cannot cause it to be skipped.
-      shell: |
+      shell: |-
         if ! rustup show active-toolchain >/dev/null 2>&1; then
           rustup default stable || exit $?
         fi
