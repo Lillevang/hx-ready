@@ -103,7 +103,12 @@ func (s Step) String() string {
 	}
 	var b strings.Builder
 	for _, kv := range s.Env {
-		b.WriteString(kv)
+		key, value, ok := strings.Cut(kv, "=")
+		if ok {
+			b.WriteString(key + "=" + shellQuote(value))
+		} else {
+			b.WriteString(shellQuote(kv))
+		}
 		b.WriteString(" \\\n")
 	}
 	b.WriteString("  ")
