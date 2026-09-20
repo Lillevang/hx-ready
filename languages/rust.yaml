@@ -21,3 +21,7 @@ fedora:
     - name: rust-analyzer
     - name: lldb
       provides: [lldb-dap]
+
+# No debian block yet: Ubuntu 24.04 does not package rust-analyzer, and the
+# alternatives (rustup component, release download) are outside D-016.
+# See docs/DECISIONS.md, Q-09.

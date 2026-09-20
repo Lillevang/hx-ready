@@ -37,23 +37,36 @@ func TestRequiresAreProvided(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		provided := map[string]bool{}
-		for _, p := range r.Fedora.Packages {
-			for _, e := range p.Executables() {
-				provided[e] = true
-			}
-		}
-		for _, c := range r.Fedora.Commands {
-			for _, e := range c.Provides {
-				provided[e] = true
-			}
-		}
 		if len(r.Requires.All()) == 0 {
 			t.Errorf("%s: requires is empty", name)
 		}
-		for _, req := range r.Requires.All() {
-			if !provided[req] {
-				t.Errorf("%s: requires %q but nothing in the recipe provides it", name, req)
+		// Every bundled recipe should cover every supported platform. The
+		// gaps listed here are deliberate and documented in DECISIONS.md;
+		// a new gap must be added here on purpose.
+		knownGaps := map[string]bool{"rust/debian": true} // Q-09
+		for _, platform := range []string{"fedora", "debian"} {
+			b := r.Blocks()[platform]
+			if b == nil {
+				if !knownGaps[name+"/"+platform] {
+					t.Errorf("%s: no %s block", name, platform)
+				}
+				continue
+			}
+			provided := map[string]bool{}
+			for _, p := range b.Packages {
+				for _, e := range p.Executables() {
+					provided[e] = true
+				}
+			}
+			for _, c := range b.Commands {
+				for _, e := range c.Provides {
+					provided[e] = true
+				}
+			}
+			for _, req := range r.Requires.All() {
+				if !provided[req] {
+					t.Errorf("%s/%s: requires %q but nothing in the block provides it", name, platform, req)
+				}
 			}
 		}
 	}
@@ -165,7 +178,8 @@ func TestValidate(t *testing.T) {
 	cases := map[string]string{
 		"name mismatch":     "language: rust\ndisplay_name: X\nfedora: {}\n",
 		"no display name":   "language: x\nfedora: {}\n",
-		"no fedora":         "language: x\ndisplay_name: X\n",
+		"no platform":       "language: x\ndisplay_name: X\n",
+		"debian bad":        "language: x\ndisplay_name: X\ndebian:\n  packages:\n    - provides: [a]\n",
 		"package no name":   "language: x\ndisplay_name: X\nfedora:\n  packages:\n    - provides: [a]\n",
 		"command no output": "language: x\ndisplay_name: X\nfedora:\n  commands:\n    - args: [a]\n",
 		"args and shell":    "language: x\ndisplay_name: X\nfedora:\n  commands:\n    - provides: [a]\n      args: [a]\n      shell: a\n",

@@ -8,23 +8,35 @@ set -euo pipefail
 # fresh VM, copies the binary and test/vm/inside.sh in, runs the scenario,
 # and destroys the VM. Modelled on linux-bootstrap/test/fedora_vm_test.sh.
 #
-#   just vm                       # full run, VM destroyed afterwards
+#   just vm                       # Fedora: full run, VM destroyed afterwards
+#   just vm-ubuntu                # same on Ubuntu 24.04 (DISTRO=ubuntu)
 #   KEEP=1 just vm                # leave the VM running for inspection
 #   just vm-ssh                   # ssh into a VM kept with KEEP=1
 #   just vm-stop                  # kill a kept VM
 #
-# The ~700MB cloud image is downloaded once and cached. Each run boots a
-# fresh overlay, so the VM is always clean. cloud-init's seed is served
-# from a tiny HTTP server on the host when no ISO tool is installed, so the
-# host needs only qemu, kvm, python3, ssh and curl.
+# The cloud image (~700MB) is downloaded once per distro and cached. Each
+# run boots a fresh overlay, so the VM is always clean. cloud-init's seed
+# is served from a tiny HTTP server on the host when no ISO tool is
+# installed, so the host needs only qemu, kvm, python3, ssh and curl.
 
+DISTRO="${DISTRO:-fedora}"
 FEDORA_VER="43"
+UBUNTU_CODENAME="noble"
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CACHE_DIR="$HOME/.cache/hx-ready-vmtest"
-BASE_IMG="$CACHE_DIR/fedora-${FEDORA_VER}-cloud.qcow2"
-# Reuse linux-bootstrap's download when it exists; it is only ever a
-# read-only backing file.
-ALT_BASE_IMG="$HOME/.cache/linux-bootstrap-vmtest/fedora-${FEDORA_VER}-cloud.qcow2"
+case "$DISTRO" in
+  fedora)
+    BASE_IMG="$CACHE_DIR/fedora-${FEDORA_VER}-cloud.qcow2"
+    # Reuse linux-bootstrap's download when it exists; it is only ever a
+    # read-only backing file.
+    ALT_BASE_IMG="$HOME/.cache/linux-bootstrap-vmtest/fedora-${FEDORA_VER}-cloud.qcow2"
+    ;;
+  ubuntu)
+    BASE_IMG="$CACHE_DIR/ubuntu-${UBUNTU_CODENAME}-cloud.img"
+    ALT_BASE_IMG=""
+    ;;
+  *) echo "DISTRO must be fedora or ubuntu, got $DISTRO" >&2; exit 2 ;;
+esac
 WORK_IMG="$CACHE_DIR/work.qcow2"
 SEED_DIR="$CACHE_DIR/seed"
 SEED_ISO="$CACHE_DIR/seed.iso"
@@ -80,18 +92,26 @@ echo "building hx-ready ..."
 (cd "$REPO_DIR" && CGO_ENABLED=0 go build -o "$CACHE_DIR/hx-ready" .)
 
 # --- fetch base image (cached across runs) ---
-if [ ! -f "$BASE_IMG" ] && [ -f "$ALT_BASE_IMG" ]; then
+if [ ! -f "$BASE_IMG" ] && [ -n "$ALT_BASE_IMG" ] && [ -f "$ALT_BASE_IMG" ]; then
   BASE_IMG="$ALT_BASE_IMG"
 fi
 if [ ! -f "$BASE_IMG" ]; then
-  BASE_URL="https://download.fedoraproject.org/pub/fedora/linux/releases/${FEDORA_VER}/Cloud/x86_64/images"
-  IMG_NAME="$(curl -fsSL "$BASE_URL/" | grep -oE 'Fedora-Cloud-Base-Generic[^"<]*\.qcow2' | head -1)"
-  [ -n "$IMG_NAME" ] || {
-    echo "could not resolve cloud image name from $BASE_URL" >&2
-    exit 1
-  }
-  echo "downloading $IMG_NAME ..."
-  curl -fL --progress-bar -o "$BASE_IMG.part" "$BASE_URL/$IMG_NAME"
+  case "$DISTRO" in
+    fedora)
+      BASE_URL="https://download.fedoraproject.org/pub/fedora/linux/releases/${FEDORA_VER}/Cloud/x86_64/images"
+      IMG_NAME="$(curl -fsSL "$BASE_URL/" | grep -oE 'Fedora-Cloud-Base-Generic[^"<]*\.qcow2' | head -1)"
+      [ -n "$IMG_NAME" ] || {
+        echo "could not resolve cloud image name from $BASE_URL" >&2
+        exit 1
+      }
+      IMG_URL="$BASE_URL/$IMG_NAME"
+      ;;
+    ubuntu)
+      IMG_URL="https://cloud-images.ubuntu.com/${UBUNTU_CODENAME}/current/${UBUNTU_CODENAME}-server-cloudimg-amd64.img"
+      ;;
+  esac
+  echo "downloading $IMG_URL ..."
+  curl -fL --progress-bar -o "$BASE_IMG.part" "$IMG_URL"
   mv "$BASE_IMG.part" "$BASE_IMG"
 fi
 

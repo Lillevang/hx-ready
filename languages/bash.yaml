@@ -15,3 +15,15 @@ fedora:
   packages:
     - name: nodejs-bash-language-server
       provides: [bash-language-server]
+
+# Debian/Ubuntu do not package bash-language-server; it comes from npm
+# into ~/.local (D-007, D-016).
+debian:
+  packages:
+    - name: npm
+  commands:
+    - provides: [bash-language-server]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, bash-language-server]
+      needs: [npm]

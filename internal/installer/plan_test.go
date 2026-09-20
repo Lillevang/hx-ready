@@ -2,6 +2,7 @@ package installer
 
 import (
 	"bytes"
+	"errors"
 	"strings"
 	"testing"
 
@@ -27,7 +28,7 @@ func stepStrings(p *Plan) []string {
 
 func TestFedoraGoAllMissing(t *testing.T) {
 	t.Setenv("HOME", "/home/tester")
-	plan, err := Fedora(goRecipe(t), []string{"gopls", "golangci-lint-langserver", "dlv"})
+	plan, err := Build(Fedora, goRecipe(t), []string{"gopls", "golangci-lint-langserver", "dlv"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,7 +54,7 @@ func TestFedoraGoAllMissing(t *testing.T) {
 }
 
 func TestFedoraGoOnlyDebugger(t *testing.T) {
-	plan, err := Fedora(goRecipe(t), []string{"dlv"})
+	plan, err := Build(Fedora, goRecipe(t), []string{"dlv"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +68,7 @@ func TestFedoraGoOnlyDebugger(t *testing.T) {
 // kept even though Helix never reports them missing.
 func TestFedoraGoOnlyLangserver(t *testing.T) {
 	t.Setenv("HOME", "/home/tester")
-	plan, err := Fedora(goRecipe(t), []string{"golangci-lint-langserver"})
+	plan, err := Build(Fedora, goRecipe(t), []string{"golangci-lint-langserver"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +82,7 @@ func TestFedoraGoOnlyLangserver(t *testing.T) {
 }
 
 func TestFedoraNothingMissing(t *testing.T) {
-	plan, err := Fedora(goRecipe(t), nil)
+	plan, err := Build(Fedora, goRecipe(t), nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +92,7 @@ func TestFedoraNothingMissing(t *testing.T) {
 }
 
 func TestFedoraUncovered(t *testing.T) {
-	plan, err := Fedora(goRecipe(t), []string{"gopls", "gofumpt"})
+	plan, err := Build(Fedora, goRecipe(t), []string{"gopls", "gofumpt"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +115,7 @@ func TestFedoraOrdersCommandsByNeeds(t *testing.T) {
 			},
 		},
 	}
-	plan, err := Fedora(r, []string{"a", "b", "c"})
+	plan, err := Build(Fedora, r, []string{"a", "b", "c"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,14 +135,50 @@ func TestFedoraCycle(t *testing.T) {
 			},
 		},
 	}
-	if _, err := Fedora(r, []string{"a", "b"}); err == nil {
+	if _, err := Build(Fedora, r, []string{"a", "b"}); err == nil {
 		t.Error("expected a cycle error")
+	}
+}
+
+func TestBuildDebian(t *testing.T) {
+	t.Setenv("HOME", "/home/tester")
+	plan, err := Build(Debian, goRecipe(t), []string{"gopls", "golangci-lint-langserver", "dlv"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := stepStrings(plan); len(got) != 3 || got[0] != "sudo apt-get install -y golang-go gopls delve" {
+		t.Errorf("steps = %q", got)
+	}
+}
+
+// A command needed by another command is pulled in even though Helix never
+// reports what it provides as missing (golangci-lint on Ubuntu).
+func TestBuildNeededCommand(t *testing.T) {
+	t.Setenv("HOME", "/home/tester")
+	plan, err := Build(Debian, goRecipe(t), []string{"golangci-lint-langserver"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{
+		"sudo apt-get install -y golang-go",
+		"GOBIN=/home/tester/.local/bin \\\n  go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest",
+		"GOBIN=/home/tester/.local/bin \\\n  go install github.com/nametake/golangci-lint-langserver@latest",
+	}
+	if got := stepStrings(plan); strings.Join(got, ";") != strings.Join(want, ";") {
+		t.Errorf("steps = %q, want %q", got, want)
+	}
+}
+
+func TestBuildNoBlock(t *testing.T) {
+	r := &recipes.Recipe{Language: "x", Fedora: &recipes.Platform{}}
+	if _, err := Build(Debian, r, []string{"a"}); !errors.Is(err, ErrNoPlatformBlock) {
+		t.Errorf("err = %v, want ErrNoPlatformBlock", err)
 	}
 }
 
 func TestDryRun(t *testing.T) {
 	t.Setenv("HOME", "/home/tester")
-	plan, err := Fedora(goRecipe(t), []string{"gopls", "golangci-lint-langserver", "dlv"})
+	plan, err := Build(Fedora, goRecipe(t), []string{"gopls", "golangci-lint-langserver", "dlv"})
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -34,3 +34,25 @@ fedora:
       # go builds it; golangci-lint is what it runs, so the package is kept
       # even though Helix never reports golangci-lint itself as missing.
       needs: [go, golangci-lint]
+
+# Ubuntu 24.04 does not package golangci-lint, so it is built from source
+# like the language server (D-016).
+debian:
+  packages:
+    - name: golang-go
+      provides: [go]
+    - name: gopls
+    - name: delve
+      provides: [dlv]
+
+  commands:
+    - provides: [golangci-lint]
+      env:
+        GOBIN: ${HOME}/.local/bin
+      args: [go, install, github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest]
+      needs: [go]
+    - provides: [golangci-lint-langserver]
+      env:
+        GOBIN: ${HOME}/.local/bin
+      args: [go, install, github.com/nametake/golangci-lint-langserver@latest]
+      needs: [go, golangci-lint]

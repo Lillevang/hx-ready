@@ -2,8 +2,6 @@ package installer
 
 import (
 	"bytes"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -36,42 +34,4 @@ func TestExecRunsHarmlessCommands(t *testing.T) {
 	if err := e.Run(Step{}); err == nil {
 		t.Error("expected failure for empty step")
 	}
-}
-
-func TestRequireFedora(t *testing.T) {
-	cases := map[string]struct {
-		content string
-		wantOK  bool
-	}{
-		"fedora":        {"NAME=\"Fedora Linux\"\nVERSION=\"43 (Workstation Edition)\"\nID=fedora\nID_LIKE=\n", true},
-		"fedora quoted": {"ID=\"fedora\"\n", true},
-		"ubuntu":        {"NAME=\"Ubuntu\"\nID=ubuntu\nID_LIKE=debian\n", false},
-		"empty":         {"", false},
-	}
-	for name, c := range cases {
-		t.Run(name, func(t *testing.T) {
-			path := filepath.Join(t.TempDir(), "os-release")
-			if err := os.WriteFile(path, []byte(c.content), 0o644); err != nil {
-				t.Fatal(err)
-			}
-			old := OSReleasePath
-			OSReleasePath = path
-			t.Cleanup(func() { OSReleasePath = old })
-			err := RequireFedora()
-			if (err == nil) != c.wantOK {
-				t.Errorf("RequireFedora() = %v, wantOK %v", err, c.wantOK)
-			}
-			if err != nil && !strings.Contains(err.Error(), "ID=fedora") {
-				t.Errorf("error should name the expected value: %v", err)
-			}
-		})
-	}
-	t.Run("missing file", func(t *testing.T) {
-		old := OSReleasePath
-		OSReleasePath = filepath.Join(t.TempDir(), "nope")
-		t.Cleanup(func() { OSReleasePath = old })
-		if err := RequireFedora(); err == nil {
-			t.Error("expected error for a missing os-release")
-		}
-	})
 }

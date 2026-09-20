@@ -111,20 +111,23 @@ func (r *Recipe) validate(filename string) error {
 			return fmt.Errorf("alias %q is empty or equal to the language name", a)
 		}
 	}
-	if r.Fedora == nil {
-		return errors.New("fedora block is required (it is the only supported platform)")
+	blocks := r.Blocks()
+	if len(blocks) == 0 {
+		return errors.New("at least one platform block (fedora, debian) is required")
 	}
-	for i, p := range r.Fedora.Packages {
-		if p.Name == "" {
-			return fmt.Errorf("fedora.packages[%d]: name is required", i)
+	for name, b := range blocks {
+		for i, p := range b.Packages {
+			if p.Name == "" {
+				return fmt.Errorf("%s.packages[%d]: name is required", name, i)
+			}
 		}
-	}
-	for i, c := range r.Fedora.Commands {
-		if len(c.Provides) == 0 {
-			return fmt.Errorf("fedora.commands[%d]: provides is required", i)
-		}
-		if (len(c.Args) == 0) == (c.Shell == "") {
-			return fmt.Errorf("fedora.commands[%d]: exactly one of args or shell must be set", i)
+		for i, c := range b.Commands {
+			if len(c.Provides) == 0 {
+				return fmt.Errorf("%s.commands[%d]: provides is required", name, i)
+			}
+			if (len(c.Args) == 0) == (c.Shell == "") {
+				return fmt.Errorf("%s.commands[%d]: exactly one of args or shell must be set", name, i)
+			}
 		}
 	}
 	return nil

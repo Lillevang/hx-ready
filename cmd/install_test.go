@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/Lillevang/hx-ready/internal/helix"
 	"github.com/Lillevang/hx-ready/internal/installer"
@@ -164,19 +165,13 @@ func (r *recordingExecutor) Run(step installer.Step) error {
 func installHarness(t *testing.T, osID, input string, fail bool) *recordingExecutor {
 	t.Helper()
 	t.Setenv("HOME", t.TempDir())
-	path := filepath.Join(t.TempDir(), "os-release")
-	if err := os.WriteFile(path, []byte("ID="+osID+"\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	oldPath := installer.OSReleasePath
-	installer.OSReleasePath = path
+	usePlatform(t, osID, "")
 	oldStdin := stdin
 	stdin = strings.NewReader(input)
 	rec := &recordingExecutor{fail: fail}
 	oldExec := newExecutor
 	newExecutor = func(io.Writer, io.Writer) installer.Executor { return rec }
 	t.Cleanup(func() {
-		installer.OSReleasePath = oldPath
 		stdin = oldStdin
 		newExecutor = oldExec
 	})
@@ -246,8 +241,8 @@ func TestInstallStillMissingAfterwards(t *testing.T) {
 	}
 }
 
-func TestInstallRefusesOffFedora(t *testing.T) {
-	rec := installHarness(t, "ubuntu", "y\n", false)
+func TestInstallRefusesUnsupportedPlatform(t *testing.T) {
+	rec := installHarness(t, "arch", "y\n", false)
 	useRunner(t, fakeRunner{fixture: "health-go-missing.txt"}, nil)
 	var stdout, stderr bytes.Buffer
 	if code := Run([]string{"install", "go", "--yes"}, &stdout, &stderr); code != ExitError {
@@ -256,7 +251,38 @@ func TestInstallRefusesOffFedora(t *testing.T) {
 	if len(rec.steps) != 0 {
 		t.Errorf("steps were run: %+v", rec.steps)
 	}
-	if !strings.Contains(stderr.String(), "only supports Fedora") || !strings.Contains(stderr.String(), "ID=ubuntu") {
+	if !strings.Contains(stderr.String(), "only supports Fedora and Ubuntu/Debian") || !strings.Contains(stderr.String(), "ID=arch") {
+		t.Errorf("stderr:\n%s", stderr.String())
+	}
+}
+
+// D-019: on Ubuntu the debian block is used and packages go through apt.
+func TestInstallUbuntu(t *testing.T) {
+	rec := installHarness(t, "ubuntu", "", false)
+	useRunner(t, &sequenceRunner{fixtures: []string{"health-go-missing.txt", "health-go-formatter-found-synthetic.txt"}}, nil)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"install", "go", "--yes"}, &stdout, &stderr); code != ExitOK {
+		t.Errorf("exit = %d, want 0; stderr: %s", code, stderr.String())
+	}
+	if len(rec.steps) != 3 || strings.Join(rec.steps[0].Args, " ") != "apt-get install -y golang-go gopls delve" ||
+		!strings.Contains(strings.Join(rec.steps[1].Args, " "), "cmd/golangci-lint@latest") ||
+		!strings.Contains(strings.Join(rec.steps[2].Args, " "), "golangci-lint-langserver@latest") {
+		t.Errorf("steps = %+v", rec.steps)
+	}
+}
+
+// A recipe without a block for the running platform is reported, not run.
+func TestInstallNoPlatformBlock(t *testing.T) {
+	installHarness(t, "ubuntu", "", false)
+	useRecipes(t, fstest.MapFS{
+		"go.yaml": {Data: []byte("language: go\ndisplay_name: Go\nrequires:\n  language_servers: [gopls]\nfedora:\n  packages:\n    - name: gopls\n")},
+	})
+	useRunner(t, fakeRunner{fixture: "health-go-missing.txt"}, nil)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"install", "go", "--dry-run"}, &stdout, &stderr); code != ExitError {
+		t.Errorf("exit = %d, want %d", code, ExitError)
+	}
+	if !strings.Contains(stderr.String(), "The Go recipe has no Ubuntu/Debian block yet") {
 		t.Errorf("stderr:\n%s", stderr.String())
 	}
 }

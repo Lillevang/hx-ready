@@ -45,6 +45,10 @@ bin:
 vm:
     bash test/vm.sh
 
+# Same scenario on Ubuntu 24.04.
+vm-ubuntu:
+    DISTRO=ubuntu bash test/vm.sh
+
 # ssh into a VM kept with KEEP=1 just vm.
 vm-ssh:
     bash test/vm.sh ssh

@@ -12,14 +12,11 @@ and any new behaviour has a fixture-driven test.
 
 Unblocked 2026-09-20 by D-016 to D-021.
 
-### T-13 Ubuntu/Debian platform
-Per D-019: `debian` block in the recipe model, `installer.Debian` using
-`apt-get install -y`, platform detection from `/etc/os-release` replacing
-the Fedora-only check, `debian` blocks for every bundled recipe, and an
-Ubuntu cloud image option in `test/vm.sh` (`DISTRO=ubuntu just vm`).
-Package names count as verified only once the VM scenario installs them.
-
 ## Blocked
+
+### T-17 rust on Ubuntu/Debian
+Add the `debian` block to `rust.yaml` once Q-09 is answered, and remove
+`rust/debian` from the known gaps in `internal/recipes/loader_test.go`.
 
 ### T-11 Java and C# recipes
 jdtls, OmniSharp and netcoredbg are GitHub release binaries, which D-016
@@ -151,3 +148,17 @@ dockerfile. Verified in `just vm`.
 github.com/hashicorp/terraform-ls@latest` per D-021. The alias machinery
 and the `health-hcl-missing-synthetic` fixture exist.
 Done 2026-09-20. Verified in `just vm`.
+
+### T-13 Ubuntu/Debian platform
+Per D-019: `debian` block in the recipe model, `installer.Debian` using
+`apt-get install -y`, platform detection from `/etc/os-release` replacing
+the Fedora-only check, `debian` blocks for every bundled recipe, and an
+Ubuntu cloud image option in `test/vm.sh` (`DISTRO=ubuntu just vm`).
+Package names count as verified only once the VM scenario installs them.
+Done 2026-09-20. Verified with `just vm-ubuntu` on Ubuntu 24.04, which
+found three gaps in the archive: golangci-lint and ruff are built via
+`go install` and `pipx` instead; rust-analyzer has no allowed channel, so
+rust has no debian block (Q-09, listed as a known gap in the recipe test).
+The plan builder now pulls in commands another command needs, not only
+packages. The Ubuntu VM installs Helix from the release tarball because
+Ubuntu does not package it.

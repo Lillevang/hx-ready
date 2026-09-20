@@ -22,3 +22,13 @@ fedora:
         npm_config_prefix: ${HOME}/.local
       args: [npm, install, -g, vscode-langservers-extracted]
       needs: [npm]
+
+debian:
+  packages:
+    - name: npm
+  commands:
+    - provides: [vscode-json-language-server, vscode-css-language-server, vscode-html-language-server]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, vscode-langservers-extracted]
+      needs: [npm]

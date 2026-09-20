@@ -21,3 +21,14 @@ fedora:
     - name: ruff
     - name: python3-lsp-server
       provides: [pylsp]
+
+# Ubuntu 24.04 does not package ruff; pipx puts it in ~/.local/bin (D-016).
+debian:
+  packages:
+    - name: pipx
+    - name: python3-pylsp
+      provides: [pylsp]
+  commands:
+    - provides: [ruff]
+      args: [pipx, install, ruff]
+      needs: [pipx]

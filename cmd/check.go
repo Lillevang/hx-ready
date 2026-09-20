@@ -47,11 +47,12 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 	}
 
 	v := assess(h, recipe)
-	plan, code := planFor(stderr, recipe, v)
+	plat := platformFor(p)
+	plan, code := planFor(stderr, plat, recipe, v)
 	if code != ExitOK {
 		return code
 	}
-	renderCheck(p, h, recipe, v, plan)
+	renderCheck(p, plat, h, recipe, v, plan)
 	if v.ready {
 		return ExitOK
 	}
@@ -75,13 +76,30 @@ func resolveLanguage(p *printer, stderr io.Writer, language string) (string, *re
 	return canonical, recipe
 }
 
+// platformFor picks the platform whose recipe block to use. check works
+// anywhere Helix runs (D-008), so on an unrecognised system it falls back
+// to Fedora and says so; install refuses instead.
+func platformFor(p *printer) installer.Platform {
+	plat, err := installer.Detect()
+	if err != nil {
+		p.line("This system is not recognised (%v); showing %s commands.", err, installer.Fedora.Display)
+		p.blank()
+		return installer.Fedora
+	}
+	return plat
+}
+
 // planFor builds the installation plan for what is missing. A nil recipe
-// yields a nil plan.
-func planFor(stderr io.Writer, recipe *recipes.Recipe, v verdict) (*installer.Plan, int) {
+// yields a nil plan; a recipe without a block for the platform yields an
+// empty plan with everything uncovered, which the renderer explains.
+func planFor(stderr io.Writer, plat installer.Platform, recipe *recipes.Recipe, v verdict) (*installer.Plan, int) {
 	if recipe == nil {
 		return nil, ExitOK
 	}
-	plan, err := installer.Fedora(recipe, v.missing)
+	plan, err := installer.Build(plat, recipe, v.missing)
+	if errors.Is(err, installer.ErrNoPlatformBlock) {
+		return &installer.Plan{Uncovered: v.missing}, ExitOK
+	}
 	if err != nil {
 		fmt.Fprintf(stderr, "The bundled recipe for %s is broken: %v\n", recipe.Language, err)
 		return nil, ExitError
@@ -95,7 +113,7 @@ func planFor(stderr io.Writer, recipe *recipes.Recipe, v verdict) (*installer.Pl
 //
 // Readiness is the verdict's (D-017): the recipe's requires when there is
 // one, otherwise everything Helix lists.
-func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe, v verdict, plan *installer.Plan) {
+func renderCheck(p *printer, plat installer.Platform, h *helix.Health, recipe *recipes.Recipe, v verdict, plan *installer.Plan) {
 	name := h.Language
 	if recipe != nil {
 		name = recipe.DisplayName
@@ -142,7 +160,11 @@ func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe, v verdict,
 	}
 
 	if recipe == nil {
-		renderNoRecipe(p, h)
+		renderNoRecipe(p, plat, h)
+	} else if plat.Block(recipe) == nil {
+		p.blank()
+		p.line("The %s recipe has no %s block yet.", recipe.DisplayName, plat.Display)
+		renderSearchHints(p, plat, v.missing)
 	} else {
 		p.blank()
 		renderPlan(p, "Suggested installation", plan)
@@ -208,19 +230,22 @@ func renderPlan(p *printer, heading string, plan *installer.Plan) {
 }
 
 // renderNoRecipe is the fallback for a language Helix knows but hx-ready
-// has no recipe for: point at dnf so the user can look for the tools by
-// the names Helix wants.
-func renderNoRecipe(p *printer, h *helix.Health) {
+// has no recipe for: point at the package manager so the user can look for
+// the tools by the names Helix wants.
+func renderNoRecipe(p *printer, plat installer.Platform, h *helix.Health) {
 	p.blank()
 	p.line("No hx-ready installation recipe exists yet for %s.", h.Language)
-	missing := h.Missing()
+	renderSearchHints(p, plat, h.Missing())
+}
+
+func renderSearchHints(p *printer, plat installer.Platform, missing []string) {
 	if len(missing) == 0 {
 		return
 	}
 	p.section("Try")
 	p.blank()
 	for _, bin := range missing {
-		p.indented("dnf search " + bin)
+		p.indented(plat.PackageSearch(bin))
 	}
 }
 

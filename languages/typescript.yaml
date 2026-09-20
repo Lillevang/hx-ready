@@ -22,3 +22,13 @@ fedora:
         npm_config_prefix: ${HOME}/.local
       args: [npm, install, -g, typescript-language-server, typescript]
       needs: [npm]
+
+debian:
+  packages:
+    - name: npm
+  commands:
+    - provides: [typescript-language-server]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, typescript-language-server, typescript]
+      needs: [npm]

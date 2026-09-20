@@ -27,3 +27,14 @@ fedora:
         GOBIN: ${HOME}/.local/bin
       args: [go, install, github.com/hashicorp/terraform-ls@latest]
       needs: [go]
+
+debian:
+  packages:
+    - name: golang-go
+      provides: [go]
+  commands:
+    - provides: [terraform-ls]
+      env:
+        GOBIN: ${HOME}/.local/bin
+      args: [go, install, github.com/hashicorp/terraform-ls@latest]
+      needs: [go]

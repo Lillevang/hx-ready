@@ -218,6 +218,41 @@ func TestCheck(t *testing.T) {
 	}
 }
 
+// TestCheckUbuntu: apt commands and apt-cache hints on Debian-family systems.
+func TestCheckUbuntu(t *testing.T) {
+	t.Setenv("HOME", "/home/tester")
+	usePlatform(t, "ubuntu", "debian")
+	useRunner(t, fakeRunner{fixture: "health-go-missing.txt"}, nil)
+	var stdout, stderr bytes.Buffer
+	Run([]string{"check", "go"}, &stdout, &stderr)
+	if !strings.Contains(stdout.String(), "  sudo apt-get install -y golang-go gopls delve\n") {
+		t.Errorf("stdout:\n%s", stdout.String())
+	}
+	stdout.Reset()
+	useRunner(t, fakeRunner{fixture: "health-ocaml-no-recipe.txt"}, nil)
+	Run([]string{"check", "ocaml"}, &stdout, &stderr)
+	if !strings.Contains(stdout.String(), "Try\n\n  apt-cache search ocamllsp\n") {
+		t.Errorf("stdout:\n%s", stdout.String())
+	}
+}
+
+// TestCheckUnknownPlatform: check still works, showing Fedora commands and
+// saying why.
+func TestCheckUnknownPlatform(t *testing.T) {
+	t.Setenv("HOME", "/home/tester")
+	usePlatform(t, "arch", "")
+	useRunner(t, fakeRunner{fixture: "health-go-missing.txt"}, nil)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"check", "go"}, &stdout, &stderr); code != ExitError {
+		t.Errorf("exit = %d, want 1", code)
+	}
+	for _, w := range []string{"This system is not recognised (", "ID=arch); showing Fedora commands.\n\nGo\n", "sudo dnf install -y golang"} {
+		if !strings.Contains(stdout.String(), w) {
+			t.Errorf("stdout lacks %q\nstdout:\n%s", w, stdout.String())
+		}
+	}
+}
+
 // TestCheckAlias covers D-009 with an in-memory recipe set: the alias is
 // announced, the canonical name is what reaches hx, and the recipe's
 // display name is used.

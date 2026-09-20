@@ -44,6 +44,8 @@ PATH hint. Shell rc files are not touched.
 ### D-008 Install refuses to run on non-Fedora
 `install` reads `/etc/os-release` and requires `ID=fedora`. `check` works
 anywhere Helix runs. The error names the file and the expected value.
+Extended by D-019: the check is now "a platform hx-ready knows", and
+`check` on an unknown platform shows Fedora commands and says so.
 
 ### D-009 Recipe aliases
 A recipe may declare `aliases: [terraform]`. `check terraform` resolves to
@@ -140,6 +142,16 @@ Fedora. Options: (a) keep them out and let `check` point at the project
 URL, (b) a `download:` step type with a pinned URL and sha256 per recipe,
 (c) wait for Fedora/COPR packaging. Proposed: (a) for now, revisit after
 Ubuntu lands. Blocks T-11, T-16.
+
+### Q-09 rust-analyzer on Ubuntu/Debian
+Ubuntu 24.04 does not package rust-analyzer (`apt-get`: "Unable to locate
+package"). Routes: (a) `rustup component add rust-analyzer`, needing the
+`rustup` package and a toolchain, which is a new channel beyond D-016;
+(b) a release download, ruled out by D-016; (c) no debian block, so
+`check rust` explains and `install rust` refuses on Ubuntu. Currently (c).
+Proposed: (a), since rustup is packaged and is how Rust users on Ubuntu
+get a toolchain anyway; it would also give lldb-dap through the `lldb`
+package. Blocks the rust/debian block only.
 
 ## Answered questions
 

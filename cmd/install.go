@@ -58,18 +58,31 @@ func runInstall(args []string, stdout, stderr io.Writer) int {
 		return code
 	}
 	v := assess(h, recipe)
+	// D-008, D-019: only run recipes on a platform we know.
+	plat, platErr := installer.Detect()
+	if platErr != nil {
+		plat = installer.Fedora
+	}
 	if v.ready {
-		renderCheck(p, h, recipe, v, nil)
+		renderCheck(p, plat, h, recipe, v, nil)
 		p.line("Nothing to install.")
 		return ExitOK
 	}
 	if recipe == nil {
-		renderCheck(p, h, nil, v, nil)
+		renderCheck(p, plat, h, nil, v, nil)
 		return ExitError
 	}
-	plan, code := planFor(stderr, recipe, v)
+	if platErr != nil {
+		fmt.Fprintf(stderr, "hx-ready install only supports %s for now.\n\n%v\n\n\"hx-ready check\" still works here; it only reads.\n", supportedPlatforms(), platErr)
+		return ExitError
+	}
+	plan, code := planFor(stderr, plat, recipe, v)
 	if code != ExitOK {
 		return code
+	}
+	if plat.Block(recipe) == nil {
+		fmt.Fprintf(stderr, "The %s recipe has no %s block yet, so there is nothing hx-ready can run here.\n", recipe.DisplayName, plat.Display)
+		return ExitError
 	}
 
 	if *dryRun {
@@ -78,12 +91,6 @@ func runInstall(args []string, stdout, stderr io.Writer) int {
 			return ExitError
 		}
 		return ExitOK
-	}
-
-	// D-008: recipes are Fedora recipes; refuse anywhere else.
-	if err := installer.RequireFedora(); err != nil {
-		fmt.Fprintln(stderr, err)
-		return ExitError
 	}
 
 	renderPlan(p, "Will run:", plan)
@@ -109,15 +116,23 @@ func runInstall(args []string, stdout, stderr io.Writer) int {
 		return code
 	}
 	afterV := assess(after, recipe)
-	afterPlan, code := planFor(stderr, recipe, afterV)
+	afterPlan, code := planFor(stderr, plat, recipe, afterV)
 	if code != ExitOK {
 		return code
 	}
-	renderCheck(p, after, recipe, afterV, afterPlan)
+	renderCheck(p, plat, after, recipe, afterV, afterPlan)
 	if afterV.ready {
 		return ExitOK
 	}
 	return ExitError
+}
+
+func supportedPlatforms() string {
+	var names []string
+	for _, p := range installer.Platforms {
+		names = append(names, p.Display)
+	}
+	return strings.Join(names, " and ")
 }
 
 // confirm asks once (D-011) and returns true only on an explicit yes.

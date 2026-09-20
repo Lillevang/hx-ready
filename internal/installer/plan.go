@@ -111,40 +111,56 @@ func (s Step) String() string {
 	return b.String()
 }
 
-// Fedora builds the plan for a recipe given the executables currently
-// missing. Packages are grouped into a single "sudo dnf install -y" step
-// (D-011); commands become one step each, ordered so that their Needs are
-// satisfied. Steps that provide nothing from missing are left out, except
-// that a package is kept when an included command needs one of its
-// executables (installing an already-present package is a no-op for dnf).
-func Fedora(r *recipes.Recipe, missing []string) (*Plan, error) {
-	if r.Fedora == nil {
-		return nil, fmt.Errorf("recipe %s has no fedora block", r.Language)
+// ErrNoPlatformBlock is returned when a recipe has no block for the
+// platform. The error text names both.
+var ErrNoPlatformBlock = errors.New("recipe has no block for this platform")
+
+// Build makes the plan for a recipe on a platform given the executables
+// currently missing. Packages are grouped into a single package-manager
+// step (D-011); commands become one step each, ordered so that their Needs
+// are satisfied. Steps that provide nothing from missing are left out,
+// except that a package is kept when an included command needs one of its
+// executables (installing an already-present package is a no-op).
+func Build(p Platform, r *recipes.Recipe, missing []string) (*Plan, error) {
+	block := p.Block(r)
+	if block == nil {
+		return nil, fmt.Errorf("%w: %s has no %s block", ErrNoPlatformBlock, r.Language, p.Name)
 	}
 	want := toSet(missing)
 
-	// Commands that provide something missing.
-	var cmds []recipes.Command
-	for _, c := range r.Fedora.Commands {
-		if anyIn(c.Provides, want) {
-			cmds = append(cmds, c)
+	// Commands that provide something missing, plus commands that provide
+	// something those commands need, until nothing new is pulled in.
+	// Executables the chosen commands rely on are also collected so the
+	// packages providing them are kept.
+	needed := map[string]bool{}
+	chosen := make([]bool, len(block.Commands))
+	for changed := true; changed; {
+		changed = false
+		for i, c := range block.Commands {
+			if chosen[i] || !(anyIn(c.Provides, want) || anyIn(c.Provides, needed)) {
+				continue
+			}
+			chosen[i] = true
+			changed = true
+			for _, n := range c.Needs {
+				needed[n] = true
+			}
 		}
 	}
-	// Executables the chosen commands rely on.
-	needed := map[string]bool{}
-	for _, c := range cmds {
-		for _, n := range c.Needs {
-			needed[n] = true
+	var cmds []recipes.Command
+	for i, c := range block.Commands {
+		if chosen[i] {
+			cmds = append(cmds, c)
 		}
 	}
 
 	// Packages that provide something missing or something needed.
 	var pkgs []string
 	covered := map[string]bool{}
-	for _, p := range r.Fedora.Packages {
-		exes := p.Executables()
+	for _, pkg := range block.Packages {
+		exes := pkg.Executables()
 		if anyIn(exes, want) || anyIn(exes, needed) {
-			pkgs = append(pkgs, p.Name)
+			pkgs = append(pkgs, pkg.Name)
 			for _, e := range exes {
 				covered[e] = true
 			}
@@ -155,7 +171,7 @@ func Fedora(r *recipes.Recipe, missing []string) (*Plan, error) {
 	if len(pkgs) > 0 {
 		plan.Steps = append(plan.Steps, Step{
 			Provides:   coveredIn(want, covered),
-			Args:       append([]string{"dnf", "install", "-y"}, pkgs...),
+			Args:       append(append([]string(nil), p.PackageArgs...), pkgs...),
 			Privileged: true,
 		})
 	}

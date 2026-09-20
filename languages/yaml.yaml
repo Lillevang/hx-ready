@@ -21,3 +21,13 @@ fedora:
         npm_config_prefix: ${HOME}/.local
       args: [npm, install, -g, yaml-language-server]
       needs: [npm]
+
+debian:
+  packages:
+    - name: npm
+  commands:
+    - provides: [yaml-language-server]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, yaml-language-server]
+      needs: [npm]

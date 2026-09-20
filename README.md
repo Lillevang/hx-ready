@@ -4,7 +4,7 @@ Prepare [Helix](https://helix-editor.com) for a programming language.
 
 Helix already knows which language servers, debug adapters and formatters
 it wants. `hx-ready` runs `hx --health <language>`, reports what is
-missing, and installs it from a bundled Fedora recipe.
+missing, and installs it from a bundled recipe for Fedora or Ubuntu/Debian.
 
 ```
 hx-ready check go       # what is missing, and how to install it
@@ -15,7 +15,8 @@ hx-ready doctor         # summary across languages
 ## Status
 
 `check`, `install` (with `--dry-run` and `--yes`) and `doctor` work on
-Fedora, with recipes for go, rust and bash. See
+Fedora and Ubuntu/Debian, with recipes for bash, dockerfile, go, hcl
+(alias terraform), javascript, json, python, rust, typescript and yaml. See
 [docs/TASKS.md](docs/TASKS.md) for what is next and
 [docs/DECISIONS.md](docs/DECISIONS.md) for the reasoning and open questions.
 
@@ -28,6 +29,7 @@ Helix install are needed only to run the binary, not the tests.
 just gate        # gofmt, vet, test, build: must pass before every PR
 just bin         # build ./bin/hx-ready
 just vm          # end-to-end run in a throwaway Fedora VM (qemu+kvm)
+just vm-ubuntu   # the same scenario on Ubuntu 24.04
 ```
 
 Unit tests never touch the system: the parser runs on captured fixtures

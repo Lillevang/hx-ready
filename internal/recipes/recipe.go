@@ -21,9 +21,22 @@ type Recipe struct {
 	// reported but not installed. See docs/DECISIONS.md, D-004.
 	Requires Requires `yaml:"requires"`
 
-	// One block per platform. Only Fedora exists today; adding a platform
-	// means adding a field here and an installer, not rewriting the model.
+	// One block per platform. Adding a platform means adding a field here
+	// and an installer.Platform entry, not rewriting the model.
 	Fedora *Platform `yaml:"fedora"`
+	Debian *Platform `yaml:"debian"` // Debian and Ubuntu (D-019)
+}
+
+// Blocks returns the platform blocks a recipe has, keyed by block name.
+func (r *Recipe) Blocks() map[string]*Platform {
+	out := map[string]*Platform{}
+	if r.Fedora != nil {
+		out["fedora"] = r.Fedora
+	}
+	if r.Debian != nil {
+		out["debian"] = r.Debian
+	}
+	return out
 }
 
 // Requires names the executables a language needs, as Helix reports them.
@@ -49,7 +62,8 @@ type Platform struct {
 }
 
 // Package is a distribution package installed with the system package
-// manager (dnf on Fedora). Installing packages always requires sudo.
+// manager (dnf on Fedora, apt on Debian). Installing packages always
+// requires sudo.
 type Package struct {
 	Name string `yaml:"name"`
 	// Provides lists the executables the package puts on PATH. Defaults to
