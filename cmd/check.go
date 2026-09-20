@@ -46,12 +46,13 @@ func runCheck(args []string, stdout, stderr io.Writer) int {
 		return code
 	}
 
-	plan, code := planFor(stderr, recipe, h)
+	v := assess(h, recipe)
+	plan, code := planFor(stderr, recipe, v)
 	if code != ExitOK {
 		return code
 	}
-	renderCheck(p, h, recipe, plan)
-	if h.Ready() {
+	renderCheck(p, h, recipe, v, plan)
+	if v.ready {
 		return ExitOK
 	}
 	return ExitError
@@ -76,11 +77,11 @@ func resolveLanguage(p *printer, stderr io.Writer, language string) (string, *re
 
 // planFor builds the installation plan for what is missing. A nil recipe
 // yields a nil plan.
-func planFor(stderr io.Writer, recipe *recipes.Recipe, h *helix.Health) (*installer.Plan, int) {
+func planFor(stderr io.Writer, recipe *recipes.Recipe, v verdict) (*installer.Plan, int) {
 	if recipe == nil {
 		return nil, ExitOK
 	}
-	plan, err := installer.Fedora(recipe, h.Missing())
+	plan, err := installer.Fedora(recipe, v.missing)
 	if err != nil {
 		fmt.Fprintf(stderr, "The bundled recipe for %s is broken: %v\n", recipe.Language, err)
 		return nil, ExitError
@@ -92,25 +93,30 @@ func planFor(stderr io.Writer, recipe *recipes.Recipe, h *helix.Health) (*instal
 // ("Primary UX"), followed by the installation suggestion when the language
 // is not ready.
 //
-// Readiness is what Helix lists (helix.Health.Ready). Whether a recipe's
-// narrower "requires" should define readiness instead is open (Q-02).
-func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe, plan *installer.Plan) {
+// Readiness is the verdict's (D-017): the recipe's requires when there is
+// one, otherwise everything Helix lists.
+func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe, v verdict, plan *installer.Plan) {
 	name := h.Language
 	if recipe != nil {
 		name = recipe.DisplayName
 	}
 	p.title(name)
 
-	if h.Ready() {
+	if v.ready {
 		p.blank()
 		for _, ls := range h.LanguageServers {
-			p.ok(toolLabel(ls))
+			if ls.Status == helix.StatusOK {
+				p.ok(toolLabel(ls))
+			} else {
+				renderTool(p, ls, v)
+			}
 		}
-		if h.DebugAdapter.Status == helix.StatusOK {
-			p.ok(toolLabel(h.DebugAdapter))
-		}
-		if h.Formatter.Status == helix.StatusOK {
-			p.ok(toolLabel(h.Formatter))
+		for _, t := range []helix.Tool{h.DebugAdapter, h.Formatter} {
+			if t.Status == helix.StatusOK {
+				p.ok(toolLabel(t))
+			} else if t.Status == helix.StatusMissing {
+				renderTool(p, t, v)
+			}
 		}
 		renderQueries(p, h)
 		p.blank()
@@ -123,12 +129,12 @@ func renderCheck(p *printer, h *helix.Health, recipe *recipes.Recipe, plan *inst
 		p.ok("none configured")
 	}
 	for _, ls := range h.LanguageServers {
-		renderTool(p, ls)
+		renderTool(p, ls, v)
 	}
 	p.section("Debug adapter")
-	renderTool(p, h.DebugAdapter)
+	renderTool(p, h.DebugAdapter, v)
 	p.section("Formatter")
-	renderTool(p, h.Formatter)
+	renderTool(p, h.Formatter, v)
 	if h.Parser != helix.StatusOK || h.Highlight != helix.StatusOK ||
 		h.Textobjects != helix.StatusOK || h.Indent != helix.StatusOK {
 		p.section("Editor support")
@@ -220,8 +226,9 @@ func renderNoRecipe(p *printer, h *helix.Health) {
 
 // renderTool prints one tool line. Slots Helix has not configured count as
 // fine (D-005); a missing tool with no command name cannot be installed and
-// is shown as a warning (D-015).
-func renderTool(p *printer, t helix.Tool) {
+// is shown as a warning (D-015); a missing tool the recipe does not require
+// is a warning too, not a failure (D-017).
+func renderTool(p *printer, t helix.Tool, v verdict) {
 	switch {
 	case t.Status == helix.StatusOK:
 		p.ok(toolLabel(t))
@@ -229,6 +236,8 @@ func renderTool(p *printer, t helix.Tool) {
 		p.ok("none configured")
 	case t.Status == helix.StatusMissing && t.Binary == "":
 		p.warn("no command configured in Helix")
+	case t.Status == helix.StatusMissing && !v.covered(t):
+		p.warn(toolLabel(t) + " (not covered by the recipe)")
 	case t.Status == helix.StatusMissing:
 		p.missing(toolLabel(t))
 	default:

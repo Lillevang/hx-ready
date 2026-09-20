@@ -47,16 +47,16 @@ func TestDoctor(t *testing.T) {
 	for _, w := range []string{
 		"Ready\n\n  ✓ bash\n  ✓ hcl\n  ✓ rust\n",
 		"Partially configured\n\n  ⚠ go\n      missing gopls\n      missing golangci-lint-lsp\n      missing dlv\n      hx-ready install go\n",
-		"  ⚠ python\n      missing ty\n      missing jedi\n      missing pylsp\n",
+		"  ⚠ python\n      ty not covered by the recipe\n      jedi not covered by the recipe\n      missing pylsp\n      hx-ready install python\n",
 		"Could not check\n\n  ✘ c: no fixture for c\n",
 	} {
 		if !strings.Contains(stdout.String(), w) {
 			t.Errorf("stdout lacks %q\nstdout:\n%s", w, stdout.String())
 		}
 	}
-	// python has no recipe, so no install hint; ada has nothing installed
-	// and no recipe, so it is filtered out; javascript likewise.
-	for _, w := range []string{"hx-ready install python", "ada", "javascript", "\x1b["} {
+	// ada has nothing installed and no recipe, so it is filtered out;
+	// javascript likewise.
+	for _, w := range []string{"ada", "javascript", "\x1b["} {
 		if strings.Contains(stdout.String(), w) {
 			t.Errorf("stdout should not contain %q\nstdout:\n%s", w, stdout.String())
 		}

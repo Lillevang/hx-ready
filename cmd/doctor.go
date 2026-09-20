@@ -23,10 +23,11 @@ Flags:
 
 // doctorEntry is one language in the doctor report.
 type doctorEntry struct {
-	language  string
-	hasRecipe bool
-	health    *helix.Health // nil when the per-language check failed
-	err       error
+	language string
+	recipe   *recipes.Recipe // nil when none is bundled
+	health   *helix.Health   // nil when the per-language check failed
+	verdict  verdict
+	err      error
 }
 
 func runDoctor(args []string, stdout, stderr io.Writer) int {
@@ -63,19 +64,24 @@ func runDoctor(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "could not list bundled recipes: %v\n", err)
 		return ExitError
 	}
-	hasRecipe := map[string]bool{}
+	byRecipe := map[string]*recipes.Recipe{}
 	for _, l := range known {
-		hasRecipe[l] = true
+		r, err := recipes.Load(l)
+		if err != nil {
+			fmt.Fprintf(stderr, "bundled recipe %s is broken: %v\n", l, err)
+			return ExitError
+		}
+		byRecipe[l] = r
 	}
 
 	// D-006: a language is worth reporting when hx-ready can do something
 	// about it, or the user has clearly started setting it up.
 	var entries []doctorEntry
 	for _, row := range rows {
-		if !*all && !hasRecipe[row.Language] && !row.HasInstalledTool() {
+		if !*all && byRecipe[row.Language] == nil && !row.HasInstalledTool() {
 			continue
 		}
-		e := doctorEntry{language: row.Language, hasRecipe: hasRecipe[row.Language]}
+		e := doctorEntry{language: row.Language, recipe: byRecipe[row.Language]}
 		if strings.HasSuffix(row.Language, helix.Truncated) {
 			e.err = errors.New("name truncated by Helix; run doctor in a wider terminal")
 		} else if raw, err := runner.Health(row.Language); err != nil {
@@ -84,6 +90,7 @@ func runDoctor(args []string, stdout, stderr io.Writer) int {
 			e.err = err
 		} else {
 			e.health = h
+			e.verdict = assess(h, e.recipe)
 		}
 		entries = append(entries, e)
 	}
@@ -99,7 +106,7 @@ func renderDoctor(p *printer, entries []doctorEntry) int {
 		switch {
 		case e.err != nil:
 			failed = append(failed, e)
-		case e.health.Ready():
+		case e.verdict.ready:
 			ready = append(ready, e)
 		default:
 			partial = append(partial, e)
@@ -132,10 +139,10 @@ func renderDoctor(p *printer, entries []doctorEntry) int {
 		group("Partially configured")
 		for _, e := range partial {
 			p.warn(e.language)
-			for _, t := range missingLines(e.health) {
+			for _, t := range missingLines(e.health, e.verdict) {
 				p.line("      %s", t)
 			}
-			if e.hasRecipe {
+			if e.recipe != nil {
 				p.line("      hx-ready install %s", e.language)
 			}
 		}
@@ -154,18 +161,22 @@ func renderDoctor(p *printer, entries []doctorEntry) int {
 }
 
 // missingLines lists what Helix wants and cannot find, using Helix's labels.
-// A missing tool with no command name is reported as such (D-015).
-func missingLines(h *helix.Health) []string {
+// A missing tool with no command name is reported as such (D-015); one the
+// recipe does not require is marked rather than counted (D-017).
+func missingLines(h *helix.Health, v verdict) []string {
 	var out []string
 	add := func(t helix.Tool, slot string) {
 		if t.Status != helix.StatusMissing {
 			return
 		}
-		if t.Binary == "" {
+		switch {
+		case t.Binary == "":
 			out = append(out, slot+" has no command configured")
-			return
+		case !v.covered(t):
+			out = append(out, toolLabel(t)+" not covered by the recipe")
+		default:
+			out = append(out, "missing "+toolLabel(t))
 		}
-		out = append(out, "missing "+toolLabel(t))
 	}
 	for _, ls := range h.LanguageServers {
 		add(ls, "language server")

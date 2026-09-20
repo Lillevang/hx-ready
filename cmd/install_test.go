@@ -33,23 +33,33 @@ func TestInstallDryRun(t *testing.T) {
 	}
 }
 
-func TestInstallDryRunOnlyMissing(t *testing.T) {
+// A formatter the user configured but the recipe does not require is
+// reported, not installed, and does not block readiness (D-017, D-020).
+func TestInstallUncoveredFormatter(t *testing.T) {
 	t.Setenv("HOME", "/home/tester")
-	// gopls and golangci-lint-langserver present, dlv missing.
 	useRunner(t, fakeRunner{fixture: "health-go-formatter-missing-synthetic.txt"}, nil)
 	var stdout, stderr bytes.Buffer
 	code := Run([]string{"install", "go", "--dry-run"}, &stdout, &stderr)
-	// gofumpt is missing but the recipe cannot provide it: nothing to run.
-	if code != ExitError {
-		t.Errorf("exit = %d, want %d", code, ExitError)
+	if code != ExitOK {
+		t.Errorf("exit = %d, want %d", code, ExitOK)
 	}
-	for _, w := range []string{
-		"Would run:\n\n  nothing: the recipe covers none of the missing tools\n",
-		"Not covered by the recipe\n  ⚠ gofumpt\n",
-	} {
+	for _, w := range []string{"  ⚠ gofumpt (not covered by the recipe)\n", "Ready.\nNothing to install.\n"} {
 		if !strings.Contains(stdout.String(), w) {
 			t.Errorf("stdout lacks %q\nstdout:\n%s", w, stdout.String())
 		}
+	}
+}
+
+// D-017: install only plans the recipe's requires.
+func TestInstallDryRunPython(t *testing.T) {
+	t.Setenv("HOME", "/home/tester")
+	useRunner(t, fakeRunner{fixture: "health-python-partial.txt"}, nil)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"install", "python", "--dry-run"}, &stdout, &stderr); code != ExitOK {
+		t.Errorf("exit = %d, want 0; stderr: %s", code, stderr.String())
+	}
+	if stdout.String() != "Would run:\n\n  sudo dnf install -y python3-lsp-server\n" {
+		t.Errorf("stdout:\n%s", stdout.String())
 	}
 }
 

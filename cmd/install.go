@@ -57,16 +57,17 @@ func runInstall(args []string, stdout, stderr io.Writer) int {
 	if code != ExitOK {
 		return code
 	}
-	if h.Ready() {
-		renderCheck(p, h, recipe, nil)
+	v := assess(h, recipe)
+	if v.ready {
+		renderCheck(p, h, recipe, v, nil)
 		p.line("Nothing to install.")
 		return ExitOK
 	}
 	if recipe == nil {
-		renderCheck(p, h, nil, nil)
+		renderCheck(p, h, nil, v, nil)
 		return ExitError
 	}
-	plan, code := planFor(stderr, recipe, h)
+	plan, code := planFor(stderr, recipe, v)
 	if code != ExitOK {
 		return code
 	}
@@ -107,12 +108,13 @@ func runInstall(args []string, stdout, stderr io.Writer) int {
 	if code != ExitOK {
 		return code
 	}
-	afterPlan, code := planFor(stderr, recipe, after)
+	afterV := assess(after, recipe)
+	afterPlan, code := planFor(stderr, recipe, afterV)
 	if code != ExitOK {
 		return code
 	}
-	renderCheck(p, after, recipe, afterPlan)
-	if after.Ready() {
+	renderCheck(p, after, recipe, afterV, afterPlan)
+	if afterV.ready {
 		return ExitOK
 	}
 	return ExitError

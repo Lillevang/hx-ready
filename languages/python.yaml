@@ -1,0 +1,23 @@
+# Recipe for Helix's "python" language.
+#
+# Helix wants (hx --health python):
+#   language servers: ty, ruff, jedi (binary: jedi-language-server), pylsp
+#   debug adapter:    none configured
+#   formatter:        none configured
+#
+# Only ruff and pylsp are required (D-017), matching linux-bootstrap's
+# python setup. ty overlaps pylsp and jedi is redundant next to it; both are
+# reported as "not covered" so nothing is hidden.
+language: python
+display_name: Python
+
+requires:
+  language_servers:
+    - ruff
+    - pylsp
+
+fedora:
+  packages:
+    - name: ruff
+    - name: python3-lsp-server
+      provides: [pylsp]

@@ -12,13 +12,6 @@ and any new behaviour has a fixture-driven test.
 
 Unblocked 2026-09-20 by D-016 to D-021.
 
-### T-10 Python recipe and recipe-driven readiness
-Implement D-017: when a recipe exists, `check`, `install` and `doctor`
-judge readiness by `requires`; other tools Helix lists are shown as
-"⚠ not covered by the recipe". Then `python.yaml` requiring `ruff` and
-`pylsp` (Fedora: `ruff`, `python3-lsp-server`), matching linux-bootstrap.
-ty and jedi are left uncovered.
-
 ### T-09 Recipes wave 2: npm packages
 yaml-language-server (yaml), typescript-language-server (typescript and
 javascript), vscode-json-language-server (json, npm package
@@ -146,3 +139,12 @@ Blocked on Q-06 (install formatters Helix has not been configured to use?).
 Closed 2026-09-20 by D-020: nothing to build. `Missing()` already includes a
 formatter Helix reports missing, and a recipe can provide one; none is
 required by default.
+
+### T-10 Python recipe and recipe-driven readiness
+Implement D-017: when a recipe exists, `check`, `install` and `doctor`
+judge readiness by `requires`; other tools Helix lists are shown as
+"⚠ not covered by the recipe". Then `python.yaml` requiring `ruff` and
+`pylsp` (Fedora: `ruff`, `python3-lsp-server`), matching linux-bootstrap.
+ty and jedi are left uncovered.
+Done 2026-09-20. `cmd/verdict.go` holds the D-017 logic; check, install and
+doctor all use it.

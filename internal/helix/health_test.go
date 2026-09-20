@@ -90,6 +90,7 @@ func TestParseFixturesExist(t *testing.T) {
 		"health-go-formatter-missing-synthetic.txt",
 		"health-csv-servers-none-synthetic.txt",
 		"health-hcl-missing-synthetic.txt",
+		"health-python-ready-uncovered-synthetic.txt",
 	}
 	for _, name := range required {
 		if _, err := os.Stat(filepath.Join("testdata", name)); err != nil {

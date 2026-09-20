@@ -137,7 +137,17 @@ for lang in bash rust; do
   expect_exit 0 bash -c "! hx --health $lang | grep -q ✘"
 done
 
-# T-07: doctor after installing go, bash and rust. lldb-dap from the rust
+# T-10: python requires only ruff and pylsp (D-017); ty and jedi stay
+# uncovered and Helix keeps reporting them, which is expected.
+step "T-10: install python --yes"
+expect_exit 0 hx-ready install python --yes
+expect_contains "\$ sudo dnf install -y ruff python3-lsp-server"
+expect_contains "ty (not covered by the recipe)"
+expect_contains "Ready."
+expect_exit 0 hx-ready check python
+expect_exit 0 bash -c 'command -v ruff && command -v pylsp'
+
+# T-07: doctor after installing go, bash, rust and python. lldb-dap from the rust
 # recipe also makes c, cpp and zig candidates (D-006), and those miss
 # their language servers, so the overall exit is 1.
 step "T-07: doctor"
@@ -146,6 +156,7 @@ expect_contains "Ready"
 expect_contains "✓ bash"
 expect_contains "✓ go"
 expect_contains "✓ rust"
+expect_contains "✓ python"
 expect_contains "⚠ c"
 expect_contains "missing clangd"
 expect_lacks "Could not check"

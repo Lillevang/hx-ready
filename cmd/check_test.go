@@ -77,6 +77,30 @@ func TestCheck(t *testing.T) {
 			wantAbsent: []string{"Ready.", "Editor support", "\x1b["},
 		},
 		{
+			// D-017: ty and jedi are not required by the python recipe.
+			name:     "python partial with recipe",
+			runner:   fakeRunner{fixture: "health-python-partial.txt"},
+			language: "python",
+			wantCode: ExitError,
+			wantOut: []string{
+				"Python\n",
+				"Language servers\n  ⚠ ty (not covered by the recipe)\n  ✓ ruff\n  ⚠ jedi (not covered by the recipe)\n  ✘ pylsp\n",
+				"Suggested installation\n\n  sudo dnf install -y python3-lsp-server\n",
+			},
+			wantAbsent: []string{"Not covered by the recipe\n", "ruff "},
+		},
+		{
+			name:     "python ready with uncovered tools",
+			runner:   fakeRunner{fixture: "health-python-ready-uncovered-synthetic.txt"},
+			language: "python",
+			wantCode: ExitOK,
+			wantOut: []string{
+				"Python\n\n  ⚠ ty (not covered by the recipe)\n  ✓ ruff\n  ⚠ jedi (not covered by the recipe)\n  ✓ pylsp\n  ✓ highlighting\n",
+				"Ready.\n",
+			},
+			wantAbsent: []string{"Suggested installation"},
+		},
+		{
 			name:     "rust ready",
 			runner:   fakeRunner{fixture: "health-rust-ready.txt"},
 			language: "rust",
@@ -194,7 +218,7 @@ func TestCheck(t *testing.T) {
 // display name is used.
 func TestCheckAlias(t *testing.T) {
 	useRecipes(t, fstest.MapFS{
-		"hcl.yaml": {Data: []byte("language: hcl\ndisplay_name: HCL\naliases: [terraform]\nfedora:\n  packages:\n    - name: terraform-ls\n")},
+		"hcl.yaml": {Data: []byte("language: hcl\ndisplay_name: HCL\naliases: [terraform]\nrequires:\n  language_servers: [terraform-ls]\nfedora:\n  packages:\n    - name: terraform-ls\n")},
 	})
 	r := &recordingRunner{fixture: "health-hcl-missing-synthetic.txt"}
 	useRunner(t, r, nil)
