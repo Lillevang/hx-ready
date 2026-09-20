@@ -68,6 +68,19 @@ func TestHealthMissingAndReady(t *testing.T) {
 	}
 }
 
+func TestUnknownToolsAreNotReady(t *testing.T) {
+	for _, h := range []*Health{
+		{},
+		{LanguageServers: []Tool{{Status: StatusUnknown}}, DebugAdapter: none, Formatter: none},
+		{DebugAdapter: Tool{Status: StatusUnknown}, Formatter: none},
+		{DebugAdapter: none, Formatter: Tool{Status: StatusUnknown}},
+	} {
+		if h.Ready() {
+			t.Errorf("unknown health is ready: %+v", h)
+		}
+	}
+}
+
 // TestParseFixturesExist keeps the fixture set honest: every file the parser
 // task (docs/TASKS.md, T-01) is expected to cover must be present.
 func TestParseFixturesExist(t *testing.T) {

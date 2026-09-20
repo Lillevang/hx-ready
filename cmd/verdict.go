@@ -47,7 +47,7 @@ func assess(h *helix.Health, r *recipes.Recipe) verdict {
 	}
 	consider(h.DebugAdapter)
 	consider(h.Formatter)
-	v.ready = len(v.missing) == 0
+	v.ready = h.ToolsKnown() && len(v.missing) == 0
 	return v
 }
 

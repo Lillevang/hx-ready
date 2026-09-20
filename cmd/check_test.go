@@ -184,6 +184,22 @@ func TestCheck(t *testing.T) {
 			wantErr:  []string{`Could not understand the output of "hx --health go".`, "Helix printed:\n  this is not helix output"},
 		},
 		{
+			name:       "incomplete output cannot be ready",
+			runner:     fakeRunner{fixture: "health-incomplete-synthetic.txt"},
+			language:   "go",
+			wantCode:   ExitError,
+			wantErr:    []string{"Could not understand the output"},
+			wantAbsent: []string{"Ready."},
+		},
+		{
+			name:       "unknown tool cannot be ready",
+			runner:     fakeRunner{fixture: "health-unknown-tool-synthetic.txt"},
+			language:   "go",
+			wantCode:   ExitError,
+			wantErr:    []string{"Could not understand the output"},
+			wantAbsent: []string{"Ready."},
+		},
+		{
 			name:     "health command fails",
 			runner:   fakeRunner{err: errors.New("hx --health failed: exit status 1")},
 			language: "go",
