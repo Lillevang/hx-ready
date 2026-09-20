@@ -21,6 +21,12 @@ Not scheduled; recorded so they are not forgotten.
   T-11 (java, c-sharp) and T-16 (markdown, helm).
 * **User config** (D-022). `~/.config/hx-ready/config.yaml` listing the
   languages `doctor` should consider (T-12).
+* **Tree-sitter query gaps** (distant future). Helix ships no
+  `textobjects.scm` or `indents.scm` for astro, html or vue, so `check`
+  shows ⚠ under "Editor support". Fixing that means query files in
+  `~/.config/helix/runtime/queries/<lang>/` or an upstream Helix
+  contribution, neither of which hx-ready does today (it never writes to
+  Helix's config or runtime). Noted 2026-09-20; not planned.
 
 ## Blocked
 
