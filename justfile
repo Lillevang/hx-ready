@@ -41,6 +41,10 @@ bin:
     mkdir -p bin
     CGO_ENABLED=0 go build -ldflags "-X github.com/Lillevang/hx-ready/cmd.Version=${VERSION:-dev}" -o bin/hx-ready .
 
+# Build release packages and SHA256SUMS into ./dist, e.g. just release v0.1.0.
+release version:
+    scripts/release.sh {{version}}
+
 # End-to-end run in a throwaway Fedora VM (never touches the host). KEEP=1 keeps it.
 vm:
     bash test/vm.sh
