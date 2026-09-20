@@ -83,11 +83,67 @@ javascript` prints `✘ '' not found in $PATH`. The parser keeps the tool with
 `Missing()` skips it: nothing can be installed to fix it, and hx-ready never
 edits Helix config (D-005).
 
+### D-016 Install channels (answers Q-01)
+Recipes may use Fedora packages plus `npm install -g`, `pipx install`,
+`go install` and `cargo install`, each with an explicit `needs` on the
+toolchain executable so the toolchain package is pulled in. User-level
+channels install into `~/.local` (D-007): `GOBIN`, `npm_config_prefix`,
+pipx's default `~/.local/bin`, `CARGO_INSTALL_ROOT`. No downloading of
+release binaries: that is where the tool becomes a package manager.
+Decided 2026-09-20.
+
+### D-017 Readiness follows the recipe (answers Q-02)
+When a recipe exists, its `requires` is the target. Tools Helix lists that
+the recipe does not require are shown as "not covered" (⚠) and do not block
+"Ready" or fail `install`. Without a recipe, readiness is everything Helix
+lists, as before. Decided 2026-09-20.
+
+### D-018 Toolchain prerequisites (answers Q-03)
+A recipe may list a runtime or toolchain as an ordinary package when the
+platform packages it (`golang`, `nodejs-npm`, `java-21-openjdk`). When it
+does not, the recipe stops with an actionable message rather than
+downloading one. Decided 2026-09-20.
+
+### D-019 Second platform is Ubuntu/Debian (answers Q-05)
+Detection: `ID=ubuntu` or `ID=debian`, or `ID_LIKE` containing `debian`.
+Package steps use `sudo apt-get install -y`. Recipes gain a `debian` block
+with the same shape as `fedora`; a recipe without a block for the running
+platform reports that plainly. Decided 2026-09-20.
+
+### D-020 Formatters are installed only when Helix asks (answers Q-06)
+Recipes may provide formatters, but a formatter is installed only when
+`hx --health` reports it missing, i.e. the user has configured one. No
+bundled recipe requires a formatter, since Helix's defaults configure none.
+Decided 2026-09-20.
+
+### D-021 terraform-ls via go install (answers Q-07)
+Follows from D-016: `go install github.com/hashicorp/terraform-ls@latest`
+with `GOBIN=${HOME}/.local/bin`, needing the `golang` package. No
+third-party rpm repository. Decided 2026-09-20.
+
 ## Open questions
 
 Each entry states what it blocks and a proposed default. Answering one
 means moving it to "Decided" with a D-number and moving the task in
 TASKS.md to "Ready".
+
+### Q-04 Should user config exist at all in v1?
+CLAUDE.md sketches `~/.config/hx-ready/config.yaml` listing languages for
+`doctor`. With D-006 the default candidate rule may be good enough.
+
+Proposed: skip until someone asks. Blocks T-12.
+
+### Q-08 Release binaries
+D-016 rules out downloading GitHub release binaries in the MVP. jdtls,
+OmniSharp, netcoredbg, marksman and helm_ls have no other channel on
+Fedora. Options: (a) keep them out and let `check` point at the project
+URL, (b) a `download:` step type with a pinned URL and sha256 per recipe,
+(c) wait for Fedora/COPR packaging. Proposed: (a) for now, revisit after
+Ubuntu lands. Blocks T-11, T-16.
+
+## Answered questions
+
+Kept for the reasoning; see the D-number named in each.
 
 ### Q-01 Which install channels may a recipe use?
 Fedora packages cover go, rust, bash and hcl. Everything else needs npm
@@ -99,7 +155,7 @@ distributed as prebuilt binaries.
 Proposed: allow `npm install -g`, `pipx install`, `go install` and
 `cargo install` as recipe commands with an explicit `needs` on the
 toolchain. Do not download release binaries in the MVP; that is where the
-tool starts becoming a package manager. Blocks T-09, T-10, T-11.
+tool starts becoming a package manager. Answered by D-016.
 
 ### Q-02 What does "ready" mean when Helix lists alternative servers?
 Python lists ty, ruff, jedi and pylsp. Installing all four is wasteful and
@@ -109,7 +165,7 @@ shown as "not covered", (c) leave it to the user's languages.toml.
 
 Proposed: (b), and print the uncovered tools so nothing is hidden. This
 also settles whether `install` may skip tools the recipe does not know.
-Blocks T-10; affects how T-02 renders a partially covered language.
+Answered by D-017.
 
 ### Q-03 Are toolchain prerequisites in scope?
 jdtls needs a JDK, OmniSharp needs the .NET SDK, typescript-language-server
@@ -117,24 +173,18 @@ needs Node. Should a recipe install the runtime too (`dnf install
 java-21-openjdk dotnet-sdk-9.0 nodejs`), or stop with "install X first"?
 
 Proposed: recipes may list runtimes as ordinary packages when Fedora
-packages them; otherwise stop with an actionable message. Blocks T-11.
-
-### Q-04 Should user config exist at all in v1?
-CLAUDE.md sketches `~/.config/hx-ready/config.yaml` listing languages for
-`doctor`. With D-006 the default candidate rule may be good enough.
-
-Proposed: skip until someone asks. Blocks T-12.
+packages them; otherwise stop with an actionable message. Answered by D-018.
 
 ### Q-05 Which second platform?
 Ubuntu/Debian, Arch, or macOS. Proposed: decide after T-07 based on which
-machine you actually use next. Blocks T-13.
+machine you actually use next. Answered by D-019.
 
 ### Q-06 Formatters
 Helix configures no formatter by default for any MVP language. Installing
 gofumpt or black without configuring Helix to use it does nothing.
 
 Proposed: only install formatters that Helix reports as missing, which
-means only when the user has configured one. Blocks T-14.
+means only when the user has configured one. Answered by D-020.
 
 ### Q-07 terraform-ls is not a Fedora package
 `sudo dnf install terraform-ls` fails on a clean Fedora 43 ("No match for
@@ -149,5 +199,4 @@ golang package; (c) no recipe, `check terraform` keeps pointing at
 Adding a third-party repository is a privileged, persistent system change
 that outlives the tool, which is why this is not decided here. Proposed:
 (b), since it reuses the go-install channel the go recipe already relies
-on and touches nothing outside `~/.local/bin`. Blocks T-15; the answer to
-Q-01 should cover it.
+on and touches nothing outside `~/.local/bin`. Answered by D-021.

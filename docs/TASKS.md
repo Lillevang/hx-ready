@@ -10,40 +10,47 @@ and any new behaviour has a fixture-driven test.
 
 ## Ready
 
-## Blocked
+Unblocked 2026-09-20 by D-016 to D-021.
+
+### T-10 Python recipe and recipe-driven readiness
+Implement D-017: when a recipe exists, `check`, `install` and `doctor`
+judge readiness by `requires`; other tools Helix lists are shown as
+"⚠ not covered by the recipe". Then `python.yaml` requiring `ruff` and
+`pylsp` (Fedora: `ruff`, `python3-lsp-server`), matching linux-bootstrap.
+ty and jedi are left uncovered.
+
+### T-09 Recipes wave 2: npm packages
+yaml-language-server (yaml), typescript-language-server (typescript and
+javascript), vscode-json-language-server (json, npm package
+vscode-langservers-extracted), docker-langserver (dockerfile, npm package
+dockerfile-language-server-nodejs). Commands use `npm install -g` with
+`npm_config_prefix=${HOME}/.local` so binaries land in `~/.local/bin`
+(D-007, D-016); `needs: [npm]` pulls in `nodejs-npm`. Verify in `just vm`.
 
 ### T-15 hcl recipe (terraform-ls)
-`hcl.yaml` with `aliases: [terraform]` and `requires: [terraform-ls]`.
-The alias machinery (D-009) and a synthetic `health-hcl-missing` fixture
-already exist. Blocked on Q-07: terraform-ls is only available from
-HashiCorp's rpm repository or as `go install
-github.com/hashicorp/terraform-ls@latest`.
+`hcl.yaml` with `aliases: [terraform]` and `go install
+github.com/hashicorp/terraform-ls@latest` per D-021. The alias machinery
+and the `health-hcl-missing-synthetic` fixture exist.
 
-### T-09 Recipes wave 2: tools Fedora does not package
-yaml-language-server, typescript-language-server (javascript, typescript),
-vscode-json-language-server (json), docker-langserver (dockerfile) are npm
-packages. marksman (markdown) and helm_ls (helm) ship as GitHub release
-binaries. Blocked on Q-01 (which install channels are allowed).
+### T-13 Ubuntu/Debian platform
+Per D-019: `debian` block in the recipe model, `installer.Debian` using
+`apt-get install -y`, platform detection from `/etc/os-release` replacing
+the Fedora-only check, `debian` blocks for every bundled recipe, and an
+Ubuntu cloud image option in `test/vm.sh` (`DISTRO=ubuntu just vm`).
+Package names count as verified only once the VM scenario installs them.
 
-### T-10 Python recipe
-Helix lists four servers (ty, ruff, jedi, pylsp). ruff and pylsp are dnf
-packages; ty and jedi-language-server are pip/pipx. Blocked on Q-02
-(what "ready" means when Helix lists alternatives) and Q-01.
+## Blocked
 
 ### T-11 Java and C# recipes
-jdtls, OmniSharp and netcoredbg are not packaged; they need a JDK or .NET
-SDK plus a download step. Blocked on Q-01 and Q-03.
+jdtls, OmniSharp and netcoredbg are GitHub release binaries, which D-016
+rules out. The runtimes could be packages (D-018) but there is nothing to
+run. Blocked on Q-08.
+
+### T-16 markdown and helm recipes
+marksman and helm_ls ship only as release binaries. Blocked on Q-08.
 
 ### T-12 User config (`~/.config/hx-ready/config.yaml`)
-CLAUDE.md says not before `check` works. Blocked on T-07 landing and Q-04.
-
-### T-13 Second platform
-Blocked on Q-05 (Ubuntu, Arch or macOS first) and on Fedora being solid
-through T-07.
-
-### T-14 Formatters
-Every MVP language reports formatter `None` with default Helix config.
-Blocked on Q-06 (install formatters Helix has not been configured to use?).
+Blocked on Q-04.
 
 ## Done
 
@@ -132,3 +139,10 @@ releases building a static Linux binary with `-ldflags -X
 Done 2026-09-19. `ci.yml` runs `just gate`; `release.yml` builds a static
 linux/amd64 binary on `v*` tags. Not exercised until the repo has a GitHub
 remote.
+
+### T-14 Formatters
+Every MVP language reports formatter `None` with default Helix config.
+Blocked on Q-06 (install formatters Helix has not been configured to use?).
+Closed 2026-09-20 by D-020: nothing to build. `Missing()` already includes a
+formatter Helix reports missing, and a recipe can provide one; none is
+required by default.
