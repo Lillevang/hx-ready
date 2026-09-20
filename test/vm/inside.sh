@@ -137,6 +137,20 @@ for lang in bash rust; do
   expect_exit 0 bash -c "! hx --health $lang | grep -q ✘"
 done
 
+# T-09: npm recipes. Binaries land in ~/.local/bin via npm_config_prefix.
+for lang in yaml typescript json dockerfile; do
+  step "T-09: install $lang --yes"
+  expect_exit 0 hx-ready install "$lang" --yes
+  expect_contains "npm_config_prefix=/home/test/.local"
+  expect_contains "Ready."
+  expect_exit 0 bash -c "! hx --health $lang | grep -q ✘"
+done
+step "T-09: javascript shares typescript's server, so nothing to install"
+expect_exit 0 hx-ready install javascript --yes
+expect_contains "Nothing to install."
+expect_exit 0 bash -c 'ls ~/.local/bin/yaml-language-server ~/.local/bin/typescript-language-server ~/.local/bin/vscode-json-language-server ~/.local/bin/docker-langserver'
+expect_exit 0 bash -c '! command -v npm | grep -q local'   # npm itself came from dnf
+
 # T-10: python requires only ruff and pylsp (D-017); ty and jedi stay
 # uncovered and Helix keeps reporting them, which is expected.
 step "T-10: install python --yes"

@@ -1,0 +1,24 @@
+# Recipe for Helix's "typescript" language.
+#
+# Helix wants (hx --health typescript):
+#   language server: typescript-language-server
+#
+# typescript-language-server drives tsserver, which ships in the
+# "typescript" npm package, so both are installed together (D-016).
+language: typescript
+display_name: TypeScript
+
+requires:
+  language_servers:
+    - typescript-language-server
+
+fedora:
+  packages:
+    - name: nodejs-npm
+      provides: [npm]
+  commands:
+    - provides: [typescript-language-server]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, typescript-language-server, typescript]
+      needs: [npm]

@@ -33,6 +33,10 @@ func doctorRunner() mapRunner {
 		"rust":       "health-rust-ready.txt",
 		"python":     "health-python-partial.txt",
 		"javascript": "health-javascript-empty-debugger.txt",
+		"typescript": "health-typescript-missing.txt",
+		"yaml":       "health-yaml-missing.txt",
+		"json":       "health-json-missing.txt",
+		"dockerfile": "health-dockerfile-missing.txt",
 	}
 }
 
@@ -46,17 +50,19 @@ func TestDoctor(t *testing.T) {
 	}
 	for _, w := range []string{
 		"Ready\n\n  ✓ bash\n  ✓ hcl\n  ✓ rust\n",
-		"Partially configured\n\n  ⚠ go\n      missing gopls\n      missing golangci-lint-lsp\n      missing dlv\n      hx-ready install go\n",
+		"Partially configured\n\n  ⚠ dockerfile\n      missing docker-langserver\n      hx-ready install dockerfile\n",
+		"  ⚠ go\n      missing gopls\n      missing golangci-lint-lsp\n      missing dlv\n      hx-ready install go\n",
 		"  ⚠ python\n      ty not covered by the recipe\n      jedi not covered by the recipe\n      missing pylsp\n      hx-ready install python\n",
+		"  ⚠ javascript\n      missing typescript-language-server\n      debug adapter has no command configured\n      hx-ready install javascript\n",
+		"  ⚠ yaml\n      missing yaml-language-server\n      hx-ready install yaml\n",
 		"Could not check\n\n  ✘ c: no fixture for c\n",
 	} {
 		if !strings.Contains(stdout.String(), w) {
 			t.Errorf("stdout lacks %q\nstdout:\n%s", w, stdout.String())
 		}
 	}
-	// ada has nothing installed and no recipe, so it is filtered out;
-	// javascript likewise.
-	for _, w := range []string{"ada", "javascript", "\x1b["} {
+	// ada has nothing installed and no recipe, so it is filtered out.
+	for _, w := range []string{"ada:", "✓ ada", "\x1b["} {
 		if strings.Contains(stdout.String(), w) {
 			t.Errorf("stdout should not contain %q\nstdout:\n%s", w, stdout.String())
 		}

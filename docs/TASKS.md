@@ -12,14 +12,6 @@ and any new behaviour has a fixture-driven test.
 
 Unblocked 2026-09-20 by D-016 to D-021.
 
-### T-09 Recipes wave 2: npm packages
-yaml-language-server (yaml), typescript-language-server (typescript and
-javascript), vscode-json-language-server (json, npm package
-vscode-langservers-extracted), docker-langserver (dockerfile, npm package
-dockerfile-language-server-nodejs). Commands use `npm install -g` with
-`npm_config_prefix=${HOME}/.local` so binaries land in `~/.local/bin`
-(D-007, D-016); `needs: [npm]` pulls in `nodejs-npm`. Verify in `just vm`.
-
 ### T-15 hcl recipe (terraform-ls)
 `hcl.yaml` with `aliases: [terraform]` and `go install
 github.com/hashicorp/terraform-ls@latest` per D-021. The alias machinery
@@ -148,3 +140,13 @@ judge readiness by `requires`; other tools Helix lists are shown as
 ty and jedi are left uncovered.
 Done 2026-09-20. `cmd/verdict.go` holds the D-017 logic; check, install and
 doctor all use it.
+
+### T-09 Recipes wave 2: npm packages
+yaml-language-server (yaml), typescript-language-server (typescript and
+javascript), vscode-json-language-server (json, npm package
+vscode-langservers-extracted), docker-langserver (dockerfile, npm package
+dockerfile-language-server-nodejs). Commands use `npm install -g` with
+`npm_config_prefix=${HOME}/.local` so binaries land in `~/.local/bin`
+(D-007, D-016); `needs: [npm]` pulls in `nodejs-npm`. Verify in `just vm`.
+Done 2026-09-20. Real fixtures captured for typescript, json and
+dockerfile. Verified in `just vm`.

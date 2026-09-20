@@ -1,0 +1,25 @@
+# Recipe for Helix's "javascript" language.
+#
+# Helix wants (hx --health javascript):
+#   language server: typescript-language-server
+#   debug adapter:   configured without a command (D-015); nothing to install
+#
+# Same tooling as typescript.yaml; Helix treats them as separate languages,
+# so each gets a recipe.
+language: javascript
+display_name: JavaScript
+
+requires:
+  language_servers:
+    - typescript-language-server
+
+fedora:
+  packages:
+    - name: nodejs-npm
+      provides: [npm]
+  commands:
+    - provides: [typescript-language-server]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, typescript-language-server, typescript]
+      needs: [npm]

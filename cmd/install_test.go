@@ -63,6 +63,37 @@ func TestInstallDryRunPython(t *testing.T) {
 	}
 }
 
+// npm recipes install into ~/.local via npm_config_prefix (D-007, D-016)
+// and pull in nodejs-npm through needs.
+func TestInstallDryRunNpm(t *testing.T) {
+	t.Setenv("HOME", "/home/tester")
+	cases := map[string]string{
+		"yaml":       "npm install -g yaml-language-server",
+		"typescript": "npm install -g typescript-language-server typescript",
+		"javascript": "npm install -g typescript-language-server typescript",
+		"json":       "npm install -g vscode-langservers-extracted",
+		"dockerfile": "npm install -g dockerfile-language-server-nodejs",
+	}
+	fixtures := map[string]string{
+		"yaml":       "health-yaml-missing.txt",
+		"typescript": "health-typescript-missing.txt",
+		"javascript": "health-javascript-empty-debugger.txt",
+		"json":       "health-json-missing.txt",
+		"dockerfile": "health-dockerfile-missing.txt",
+	}
+	for lang, cmd := range cases {
+		useRunner(t, fakeRunner{fixture: fixtures[lang]}, nil)
+		var stdout, stderr bytes.Buffer
+		if code := Run([]string{"install", lang, "--dry-run"}, &stdout, &stderr); code != ExitOK {
+			t.Errorf("%s: exit = %d, want 0; stderr: %s", lang, code, stderr.String())
+		}
+		want := "Would run:\n\n  sudo dnf install -y nodejs-npm\n\n  npm_config_prefix=/home/tester/.local \\\n    " + cmd + "\n"
+		if stdout.String() != want {
+			t.Errorf("%s: stdout:\n%s\nwant:\n%s", lang, stdout.String(), want)
+		}
+	}
+}
+
 func TestInstallReady(t *testing.T) {
 	useRunner(t, fakeRunner{fixture: "health-go-formatter-found-synthetic.txt"}, nil)
 	var stdout, stderr bytes.Buffer

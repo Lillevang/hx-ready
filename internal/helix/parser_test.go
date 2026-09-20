@@ -209,6 +209,42 @@ func TestParseFixtures(t *testing.T) {
 			wantMissing: []string{"terraform-ls"},
 		},
 		{
+			fixture:  "health-typescript-missing.txt",
+			language: "typescript",
+			want: Health{
+				Language:        "typescript",
+				LanguageServers: []Tool{missing("typescript-language-server", "typescript-language-server")},
+				DebugAdapter:    none,
+				Formatter:       none,
+				Parser:          StatusOK, Highlight: StatusOK, Textobjects: StatusOK, Indent: StatusOK,
+			},
+			wantMissing: []string{"typescript-language-server"},
+		},
+		{
+			fixture:  "health-json-missing.txt",
+			language: "json",
+			want: Health{
+				Language:        "json",
+				LanguageServers: []Tool{missing("vscode-json-language-server", "vscode-json-language-server")},
+				DebugAdapter:    none,
+				Formatter:       none,
+				Parser:          StatusOK, Highlight: StatusOK, Textobjects: StatusOK, Indent: StatusOK,
+			},
+			wantMissing: []string{"vscode-json-language-server"},
+		},
+		{
+			fixture:  "health-dockerfile-missing.txt",
+			language: "dockerfile",
+			want: Health{
+				Language:        "dockerfile",
+				LanguageServers: []Tool{missing("docker-langserver", "docker-langserver")},
+				DebugAdapter:    none,
+				Formatter:       none,
+				Parser:          StatusOK, Highlight: StatusOK, Textobjects: StatusOK, Indent: StatusMissing,
+			},
+			wantMissing: []string{"docker-langserver"},
+		},
+		{
 			fixture:  "health-csv-servers-none-synthetic.txt",
 			language: "csv",
 			want: Health{

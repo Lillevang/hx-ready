@@ -1,0 +1,23 @@
+# Recipe for Helix's "dockerfile" language.
+#
+# Helix wants (hx --health dockerfile):
+#   language server: docker-langserver
+#
+# The binary comes from the dockerfile-language-server-nodejs npm package.
+language: dockerfile
+display_name: Dockerfile
+
+requires:
+  language_servers:
+    - docker-langserver
+
+fedora:
+  packages:
+    - name: nodejs-npm
+      provides: [npm]
+  commands:
+    - provides: [docker-langserver]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, dockerfile-language-server-nodejs]
+      needs: [npm]

@@ -1,0 +1,23 @@
+# Recipe for Helix's "yaml" language.
+#
+# Helix wants (hx --health yaml):
+#   language server: yaml-language-server
+#
+# Not packaged by Fedora; installed from npm into ~/.local (D-007, D-016).
+language: yaml
+display_name: YAML
+
+requires:
+  language_servers:
+    - yaml-language-server
+
+fedora:
+  packages:
+    - name: nodejs-npm
+      provides: [npm]
+  commands:
+    - provides: [yaml-language-server]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, yaml-language-server]
+      needs: [npm]

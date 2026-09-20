@@ -1,0 +1,24 @@
+# Recipe for Helix's "json" language.
+#
+# Helix wants (hx --health json):
+#   language server: vscode-json-language-server
+#
+# The binary comes from the vscode-langservers-extracted npm package, which
+# also provides the css and html servers.
+language: json
+display_name: JSON
+
+requires:
+  language_servers:
+    - vscode-json-language-server
+
+fedora:
+  packages:
+    - name: nodejs-npm
+      provides: [npm]
+  commands:
+    - provides: [vscode-json-language-server, vscode-css-language-server, vscode-html-language-server]
+      env:
+        npm_config_prefix: ${HOME}/.local
+      args: [npm, install, -g, vscode-langservers-extracted]
+      needs: [npm]

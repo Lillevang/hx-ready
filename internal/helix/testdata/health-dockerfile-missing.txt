@@ -1,0 +1,8 @@
+Configured language servers:
+  [38;5;9m✘[39m docker-langserver: [38;5;9m'docker-langserver' not found in $PATH[39m
+Configured debug adapter:[38;5;11m None[39m
+Configured formatter:[38;5;11m None[39m
+Tree-sitter parser: [38;5;10m✓[39m
+Highlight queries: [38;5;10m✓[39m
+Textobject queries: [38;5;10m✓[39m
+Indent queries: [38;5;9m✘[39m
