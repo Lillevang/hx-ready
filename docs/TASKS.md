@@ -10,24 +10,28 @@ and any new behaviour has a fixture-driven test.
 
 ## Ready
 
-Unblocked 2026-09-20 by D-016 to D-021.
+Nothing at the moment; see Roadmap and Blocked.
+
+## Roadmap
+
+Not scheduled; recorded so they are not forgotten.
+
+* **Release-binary downloads** (D-023). A `download:` step type with a
+  pinned URL, checksum and target in `~/.local/bin`, which would unblock
+  T-11 (java, c-sharp) and T-16 (markdown, helm).
+* **User config** (D-022). `~/.config/hx-ready/config.yaml` listing the
+  languages `doctor` should consider (T-12).
 
 ## Blocked
 
-### T-17 rust on Ubuntu/Debian
-Add the `debian` block to `rust.yaml` once Q-09 is answered, and remove
-`rust/debian` from the known gaps in `internal/recipes/loader_test.go`.
-
 ### T-11 Java and C# recipes
-jdtls, OmniSharp and netcoredbg are GitHub release binaries, which D-016
-rules out. The runtimes could be packages (D-018) but there is nothing to
-run. Blocked on Q-08.
+Needs the release-download step from the roadmap (D-023).
 
 ### T-16 markdown and helm recipes
-marksman and helm_ls ship only as release binaries. Blocked on Q-08.
+Needs the release-download step from the roadmap (D-023).
 
-### T-12 User config (`~/.config/hx-ready/config.yaml`)
-Blocked on Q-04.
+### T-12 User config
+Deferred by D-022; see the roadmap.
 
 ## Done
 
@@ -162,3 +166,15 @@ rust has no debian block (Q-09, listed as a known gap in the recipe test).
 The plan builder now pulls in commands another command needs, not only
 packages. The Ubuntu VM installs Helix from the release tarball because
 Ubuntu does not package it.
+
+### T-17 rust on Ubuntu/Debian
+Per D-024: `debian` block in `rust.yaml` with `rustup` and `lldb`
+packages, `rustup default stable` then `rustup component add
+rust-analyzer`; remove `rust/debian` from the known gaps in
+`internal/recipes/loader_test.go`; extend the D-007 PATH hint to
+`~/.cargo/bin`. Verify with `just vm-ubuntu`.
+Done 2026-09-20. Ubuntu's lldb package ships only `lldb-dap-18`, so the
+block adds a user-level symlink in `~/.local/bin` via the `shell:` escape
+hatch (a glob keeps it LLVM-version independent). Verified with
+`just vm-ubuntu`. `INSIDE='cmd' bash test/vm.sh` was added for this kind
+of exploration.

@@ -13,6 +13,8 @@ set -euo pipefail
 #   KEEP=1 just vm                # leave the VM running for inspection
 #   just vm-ssh                   # ssh into a VM kept with KEEP=1
 #   just vm-stop                  # kill a kept VM
+#   INSIDE='cmd' bash test/vm.sh  # run one command in a fresh VM instead
+#                                 # of the scenario (exploration)
 #
 # The cloud image (~700MB) is downloaded once per distro and cached. Each
 # run boots a fresh overlay, so the VM is always clean. cloud-init's seed
@@ -186,7 +188,11 @@ tar -C "$REPO_DIR/test/vm" -czf - . | vm_ssh 'mkdir -p vm && tar -xzf - -C vm'
 FAILED=0
 echo
 echo "===== scenario"
-vm_ssh 'bash vm/inside.sh' || FAILED=1
+if [ -n "${INSIDE:-}" ]; then
+  vm_ssh "$INSIDE" || FAILED=1
+else
+  vm_ssh 'bash vm/inside.sh' || FAILED=1
+fi
 
 echo
 if [ "${KEEP:-0}" = "1" ]; then

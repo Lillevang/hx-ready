@@ -5,7 +5,7 @@
 # Each step prints the command output so a failing run can be read without
 # ssh-ing in. Steps are grouped by the task in docs/TASKS.md that they cover.
 set -u
-export PATH="$HOME/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
 
 fail=0
 step() {
@@ -60,7 +60,7 @@ case "$ID" in
     PM_SEARCH="apt-cache search"
     GO_PKGS="golang-go gopls delve"
     PY_PKGS="pipx python3-pylsp"
-    RUST_ON_THIS_DISTRO=0   # Q-09
+    RUST_ON_THIS_DISTRO=1
     ;;
   *) echo "unsupported VM distro: $ID"; exit 2 ;;
 esac
@@ -175,12 +175,6 @@ if [ "$RUST_ON_THIS_DISTRO" = 1 ]; then
   expect_exit 0 hx-ready install rust --yes
   expect_contains "Ready."
   expect_exit 0 hx-ready check rust
-else
-  step "T-06: rust has no recipe block on $ID (Q-09)"
-  expect_exit 1 hx-ready install rust --yes
-  expect_contains "The Rust recipe has no Ubuntu/Debian block yet"
-  expect_exit 1 hx-ready check rust
-  expect_contains "$PM_SEARCH rust-analyzer"
 fi
 
 # T-09: npm recipes. Binaries land in ~/.local/bin via npm_config_prefix.

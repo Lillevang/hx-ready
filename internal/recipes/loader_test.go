@@ -43,7 +43,7 @@ func TestRequiresAreProvided(t *testing.T) {
 		// Every bundled recipe should cover every supported platform. The
 		// gaps listed here are deliberate and documented in DECISIONS.md;
 		// a new gap must be added here on purpose.
-		knownGaps := map[string]bool{"rust/debian": true} // Q-09
+		knownGaps := map[string]bool{}
 		for _, platform := range []string{"fedora", "debian"} {
 			b := r.Blocks()[platform]
 			if b == nil {

@@ -123,35 +123,33 @@ Follows from D-016: `go install github.com/hashicorp/terraform-ls@latest`
 with `GOBIN=${HOME}/.local/bin`, needing the `golang` package. No
 third-party rpm repository. Decided 2026-09-20.
 
+### D-022 No user config in v1 (answers Q-04)
+`~/.config/hx-ready/config.yaml` is not implemented. The D-006 candidate
+rule is enough for `doctor` for now. It stays on the roadmap in TASKS.md.
+Decided 2026-09-20.
+
+### D-023 No release-binary downloads yet (answers Q-08)
+Recipes do not download GitHub release binaries. jdtls, OmniSharp,
+netcoredbg, marksman and helm_ls therefore have no recipe and `check`
+points at the package manager. A `download:` step type with a pinned URL
+and checksum is expected eventually and is on the roadmap. Decided
+2026-09-20.
+
+### D-024 rust-analyzer on Ubuntu/Debian via rustup (answers Q-09)
+The `rustup` package is an allowed channel on Debian-family platforms, in
+addition to D-016: `rustup default stable` then `rustup component add
+rust-analyzer`. rustup puts its proxies in `~/.cargo/bin`, so the D-007
+PATH hint also looks there. Debian-family lldb packages install only a
+versioned `lldb-dap-N`; the recipe symlinks it to `~/.local/bin/lldb-dap`.
+Decided 2026-09-20.
+
 ## Open questions
 
 Each entry states what it blocks and a proposed default. Answering one
 means moving it to "Decided" with a D-number and moving the task in
 TASKS.md to "Ready".
 
-### Q-04 Should user config exist at all in v1?
-CLAUDE.md sketches `~/.config/hx-ready/config.yaml` listing languages for
-`doctor`. With D-006 the default candidate rule may be good enough.
-
-Proposed: skip until someone asks. Blocks T-12.
-
-### Q-08 Release binaries
-D-016 rules out downloading GitHub release binaries in the MVP. jdtls,
-OmniSharp, netcoredbg, marksman and helm_ls have no other channel on
-Fedora. Options: (a) keep them out and let `check` point at the project
-URL, (b) a `download:` step type with a pinned URL and sha256 per recipe,
-(c) wait for Fedora/COPR packaging. Proposed: (a) for now, revisit after
-Ubuntu lands. Blocks T-11, T-16.
-
-### Q-09 rust-analyzer on Ubuntu/Debian
-Ubuntu 24.04 does not package rust-analyzer (`apt-get`: "Unable to locate
-package"). Routes: (a) `rustup component add rust-analyzer`, needing the
-`rustup` package and a toolchain, which is a new channel beyond D-016;
-(b) a release download, ruled out by D-016; (c) no debian block, so
-`check rust` explains and `install rust` refuses on Ubuntu. Currently (c).
-Proposed: (a), since rustup is packaged and is how Rust users on Ubuntu
-get a toolchain anyway; it would also give lldb-dap through the `lldb`
-package. Blocks the rust/debian block only.
+None at the moment.
 
 ## Answered questions
 
@@ -212,3 +210,27 @@ Adding a third-party repository is a privileged, persistent system change
 that outlives the tool, which is why this is not decided here. Proposed:
 (b), since it reuses the go-install channel the go recipe already relies
 on and touches nothing outside `~/.local/bin`. Answered by D-021.
+
+### Q-04 Should user config exist at all in v1?
+CLAUDE.md sketches `~/.config/hx-ready/config.yaml` listing languages for
+`doctor`. With D-006 the default candidate rule may be good enough.
+
+Proposed: skip until someone asks. Answered by D-022.
+
+### Q-08 Release binaries
+D-016 rules out downloading GitHub release binaries in the MVP. jdtls,
+OmniSharp, netcoredbg, marksman and helm_ls have no other channel on
+Fedora. Options: (a) keep them out and let `check` point at the project
+URL, (b) a `download:` step type with a pinned URL and sha256 per recipe,
+(c) wait for Fedora/COPR packaging. Proposed: (a) for now, revisit after
+Ubuntu lands. Answered by D-023.
+
+### Q-09 rust-analyzer on Ubuntu/Debian
+Ubuntu 24.04 does not package rust-analyzer (`apt-get`: "Unable to locate
+package"). Routes: (a) `rustup component add rust-analyzer`, needing the
+`rustup` package and a toolchain, which is a new channel beyond D-016;
+(b) a release download, ruled out by D-016; (c) no debian block, so
+`check rust` explains and `install rust` refuses on Ubuntu. Currently (c).
+Proposed: (a), since rustup is packaged and is how Rust users on Ubuntu
+get a toolchain anyway; it would also give lldb-dap through the `lldb`
+package. Answered by D-024.

@@ -302,6 +302,42 @@ func TestInstallStepFails(t *testing.T) {
 	}
 }
 
+// TestCheckPathHintCargo covers D-024: rustup proxies live in ~/.cargo/bin.
+func TestCheckPathHintCargo(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	bin := filepath.Join(home, ".cargo", "bin")
+	if err := os.MkdirAll(bin, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(bin, "rust-analyzer"), []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	useRunner(t, fakeRunner{fixture: "health-rust-missing-synthetic.txt"}, nil)
+	var stdout, stderr bytes.Buffer
+	Run([]string{"check", "rust"}, &stdout, &stderr)
+	want := "PATH\n\n  rust-analyzer exists in " + bin + ", but that directory is not on Helix's PATH.\n"
+	if !strings.Contains(stdout.String(), want) || !strings.Contains(stdout.String(), `export PATH="$HOME/.cargo/bin:$PATH"`) {
+		t.Errorf("stdout:\n%s", stdout.String())
+	}
+}
+
+// TestInstallDryRunRustUbuntu: rustup steps in order (D-024).
+func TestInstallDryRunRustUbuntu(t *testing.T) {
+	t.Setenv("HOME", "/home/tester")
+	usePlatform(t, "ubuntu", "debian")
+	useRunner(t, fakeRunner{fixture: "health-rust-missing-synthetic.txt"}, nil)
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"install", "rust", "--dry-run"}, &stdout, &stderr); code != ExitOK {
+		t.Errorf("exit = %d, want 0; stderr: %s", code, stderr.String())
+	}
+	want := "Would run:\n\n  sudo apt-get install -y rustup lldb\n\n  rustup default stable\n\n  rustup component add rust-analyzer\n\n" +
+		"  mkdir -p \"$HOME/.local/bin\" && ln -sf \"$(ls /usr/lib/llvm-*/bin/lldb-dap | sort -V | tail -1)\" \"$HOME/.local/bin/lldb-dap\"\n"
+	if stdout.String() != want {
+		t.Errorf("stdout:\n%s\nwant:\n%s", stdout.String(), want)
+	}
+}
+
 // TestCheckPathHint covers D-007: the tool is in ~/.local/bin but Helix
 // cannot see it.
 func TestCheckPathHint(t *testing.T) {

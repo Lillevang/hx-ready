@@ -177,38 +177,45 @@ func renderCheck(p *printer, plat installer.Platform, h *helix.Health, recipe *r
 	p.indented("hx --health " + h.Language)
 }
 
-// localBin is where user-level installs go (D-007). A variable for tests.
-var localBin = func() string {
+// userBinDirs lists where user-level installs land: ~/.local/bin (D-007)
+// and rustup's ~/.cargo/bin (D-024). Each entry is the directory and the
+// shell line that would add it.
+func userBinDirs() [][2]string {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return ""
+		return nil
 	}
-	return filepath.Join(home, ".local", "bin")
+	return [][2]string{
+		{filepath.Join(home, ".local", "bin"), `export PATH="$HOME/.local/bin:$PATH"`},
+		{filepath.Join(home, ".cargo", "bin"), `export PATH="$HOME/.cargo/bin:$PATH"`},
+	}
 }
 
-// renderPathHint prints a one-line hint when a missing tool already exists
-// in ~/.local/bin: it was installed, Helix just cannot see it (D-007).
+// renderPathHint prints a hint when a missing tool already exists in a
+// user bin directory: it was installed, Helix just cannot see it (D-007).
 // Shell rc files are never edited.
 func renderPathHint(p *printer, h *helix.Health) {
-	dir := localBin()
-	if dir == "" {
-		return
-	}
-	var found []string
-	for _, bin := range h.Missing() {
-		if fi, err := os.Stat(filepath.Join(dir, bin)); err == nil && !fi.IsDir() {
-			found = append(found, bin)
+	first := true
+	for _, d := range userBinDirs() {
+		var found []string
+		for _, bin := range h.Missing() {
+			if fi, err := os.Stat(filepath.Join(d[0], bin)); err == nil && !fi.IsDir() {
+				found = append(found, bin)
+			}
 		}
+		if len(found) == 0 {
+			continue
+		}
+		if first {
+			p.section("PATH")
+			first = false
+		}
+		p.blank()
+		p.indented(fmt.Sprintf("%s exists in %s, but that directory is not on Helix's PATH.", strings.Join(found, ", "), d[0]))
+		p.indented("Add it to your shell and restart Helix:")
+		p.blank()
+		p.indented(d[1])
 	}
-	if len(found) == 0 {
-		return
-	}
-	p.section("PATH")
-	p.blank()
-	p.indented(fmt.Sprintf("%s exists in %s, but that directory is not on Helix's PATH.", strings.Join(found, ", "), dir))
-	p.indented("Add it to your shell and restart Helix:")
-	p.blank()
-	p.indented(`export PATH="$HOME/.local/bin:$PATH"`)
 }
 
 // renderPlan prints the steps under a heading, then anything the recipe
